@@ -5,6 +5,7 @@ import PageHeader from '@/components/layout/PageHeader';
 import SettingsGroup from '@/components/settings/SettingsGroup';
 import SettingsItem from '@/components/settings/SettingsItem';
 import { useUser } from '@/context/UserContext';
+import { toast } from 'sonner';
 import { 
   Palette, 
   Target, 
