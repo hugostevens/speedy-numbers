@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import PageHeader from '@/components/layout/PageHeader';
 import ResourceCard from '@/components/knowledge/ResourceCard';
@@ -57,7 +56,6 @@ const Knowledge: React.FC = () => {
         
         console.log('Found struggling questions:', data);
         
-        // Cast the operation to MathOperation type
         const typedData = data?.map(item => ({
           ...item,
           operation: item.operation as MathOperation
@@ -75,7 +73,6 @@ const Knowledge: React.FC = () => {
   }, [user]);
   
   const handleResourceSelect = (resource: KnowledgeItem) => {
-    // In a real app, this would navigate to a resource page
     navigate(`/knowledge/resource/${resource.id}`);
   };
 
@@ -83,11 +80,9 @@ const Knowledge: React.FC = () => {
     setQuestionDialogOpen(true);
   };
   
-  // Create a knowledge item from a struggling question
   const createResourceFromQuestion = (question: StruggleQuestion): KnowledgeItem => {
     const operationSymbol = getOperationSymbol(question.operation);
     
-    // Find which level this question belongs to
     const matchingLevel = Object.values(levels).find(level => 
       level.operation === question.operation && 
       Math.max(question.num1, question.num2) >= level.range[0] && 
@@ -101,6 +96,10 @@ const Knowledge: React.FC = () => {
       type: 'video',
       tags: [question.operation]
     };
+  };
+  
+  const handleStruggleQuestionSelect = (resource: KnowledgeItem) => {
+    console.log('Struggling question selected, but no navigation will occur');
   };
   
   return (
@@ -118,7 +117,7 @@ const Knowledge: React.FC = () => {
               <ResourceCard 
                 key={question.id}
                 resource={createResourceFromQuestion(question)}
-                onSelect={handleResourceSelect}
+                onSelect={handleStruggleQuestionSelect}
                 num1={question.num1}
                 num2={question.num2}
                 operation={question.operation}

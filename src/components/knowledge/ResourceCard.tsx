@@ -43,11 +43,18 @@ const ResourceCard: React.FC<ResourceCardProps> = ({
     setHelpDialogOpen(true);
   };
   
+  const handleCardClick = () => {
+    // Only navigate if it's not a struggling question (no help button)
+    if (!showHelpButton) {
+      onSelect(resource);
+    }
+  };
+  
   return (
     <>
       <div 
-        className="math-card card-hover cursor-pointer relative"
-        onClick={() => onSelect(resource)}
+        className={`math-card ${!showHelpButton ? "card-hover cursor-pointer" : ""} relative`}
+        onClick={handleCardClick}
       >
         <div className="flex items-start gap-3">
           <div className="math-icon-container h-10 w-10">
