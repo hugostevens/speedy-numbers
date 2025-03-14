@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
@@ -9,7 +8,7 @@ import { supabase } from '@/integrations/supabase/client';
 
 export const usePracticeSession = (levelId: string | undefined, level: MathLevel | undefined) => {
   const navigate = useNavigate();
-  const { user, updateDailyGoal, checkAndUpdateStreak } = useUser();
+  const { user, updateDailyGoal, checkAndUpdateStreak, checkAndAwardBadges } = useUser();
   
   const [questions, setQuestions] = useState<MathQuestion[]>([]);
   const [currentIndex, setCurrentIndex] = useState(0);
@@ -280,7 +279,10 @@ export const usePracticeSession = (levelId: string | undefined, level: MathLevel
         const percentCorrect = finalScore / questions.length * 100;
         
         updateDailyGoal(1);
-        checkAndUpdateStreak();
+        checkAndUpdateStreak().then(() => {
+          // Check for new badges after updating streak
+          checkAndAwardBadges();
+        });
         
         toast.success(`Practice completed! Score: ${finalScore}/${questions.length}`);
         

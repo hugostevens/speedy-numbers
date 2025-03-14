@@ -1,9 +1,9 @@
-
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { UserProfile, Badge } from '@/types';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
 import { Session } from '@supabase/supabase-js';
+import { checkForNewBadges } from '@/utils/badgeUtils';
 
 interface UserContextType {
   user: UserProfile | null;
@@ -15,6 +15,7 @@ interface UserContextType {
   updateTheme: (theme: string) => void;
   signOut: () => Promise<void>;
   checkAndUpdateStreak: () => Promise<void>;
+  checkAndAwardBadges: () => Promise<void>;
 }
 
 const initialBadges: Badge[] = [
@@ -73,6 +74,7 @@ const UserContext = createContext<UserContextType>({
   updateTheme: () => {},
   signOut: async () => {},
   checkAndUpdateStreak: async () => {},
+  checkAndAwardBadges: async () => {},
 });
 
 export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
@@ -98,7 +100,6 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
     const fetchUserData = async (currentSession: Session) => {
       try {
-        // Fetch user streak data
         const { data: streakData, error: streakError } = await supabase
           .from('user_streaks')
           .select('*')
@@ -165,12 +166,10 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
     if (!user?.id || !session) return;
     
     try {
-      // Get the current date in the user's timezone
       const today = new Date();
       today.setHours(0, 0, 0, 0);
       const todayString = today.toISOString().split('T')[0];
       
-      // Get streak data
       const { data: streakData, error: fetchError } = await supabase
         .from('user_streaks')
         .select('*')
@@ -183,7 +182,6 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
       }
       
       if (!streakData) {
-        // If no streak record exists, create one
         const { error: insertError } = await supabase
           .from('user_streaks')
           .insert({
@@ -211,34 +209,28 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
       let newStreak = streakData.current_streak;
       let updatedLongestStreak = streakData.longest_streak;
       
-      // If the user has already practiced today, don't update the streak
       if (lastPracticeDate && lastPracticeDate.getTime() === today.getTime()) {
         console.log('User already practiced today');
         return;
       }
       
-      // If the user practiced yesterday, increment streak
       if (lastPracticeDate && lastPracticeDate.getTime() === yesterday.getTime()) {
         newStreak += 1;
         console.log('User practiced yesterday, incrementing streak to', newStreak);
       } 
-      // If the user didn't practice yesterday but practiced earlier, reset streak to 1
       else if (lastPracticeDate && lastPracticeDate.getTime() < yesterday.getTime()) {
         newStreak = 1;
         console.log('Streak reset to 1 (no practice yesterday)');
       }
-      // If the user has no last practice date record, set streak to 1
       else if (!lastPracticeDate) {
         newStreak = 1;
         console.log('First practice, setting streak to 1');
       }
       
-      // Update longest streak if current streak is higher
       if (newStreak > updatedLongestStreak) {
         updatedLongestStreak = newStreak;
       }
       
-      // Update streak record in database
       const { error: updateError } = await supabase
         .from('user_streaks')
         .update({
@@ -254,14 +246,12 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
         return;
       }
       
-      // Update UI state
       setUser(prev => prev ? { 
         ...prev, 
         streak: newStreak,
         longestStreak: updatedLongestStreak
       } : prev);
       
-      // Show toast messages for streak milestones
       if (newStreak > streakData.current_streak && newStreak % 5 === 0) {
         toast.success(`🔥 ${newStreak} day streak achieved!`);
       }
@@ -343,6 +333,31 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
     toast.success('Signed out successfully');
   };
 
+  const checkAndAwardBadges = async () => {
+    if (!user?.id || !session) return;
+    
+    try {
+      const { earnedBadges, shouldUpdateUI } = await checkForNewBadges(user.id);
+      
+      if (earnedBadges.length > 0) {
+        const newBadges = earnedBadges.filter(newBadge => 
+          !user.badges.some(existingBadge => existingBadge.id === newBadge.id && existingBadge.completed)
+        );
+        
+        if (newBadges.length > 0) {
+          newBadges.forEach(badge => {
+            addBadge(badge);
+            toast.success(`🏆 New badge: ${badge.name}`);
+          });
+          
+          console.log('New badges awarded:', newBadges);
+        }
+      }
+    } catch (error) {
+      console.error('Error checking and awarding badges:', error);
+    }
+  };
+
   return (
     <UserContext.Provider value={{ 
       user, 
@@ -353,7 +368,8 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
       addBadge,
       updateTheme,
       signOut,
-      checkAndUpdateStreak
+      checkAndUpdateStreak,
+      checkAndAwardBadges
     }}>
       {children}
     </UserContext.Provider>
