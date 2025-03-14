@@ -33,7 +33,7 @@ export const usePracticeSession = (levelId: string | undefined, level: MathLevel
     const fetchQuestionsWithMasteryInfo = async () => {
       const questionSet = generateQuestionSet(
         level.operation,
-        5,
+        10, // Changed from 5 to 10 questions
         level.range[0],
         level.range[1]
       );
