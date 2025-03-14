@@ -26,7 +26,8 @@ const PracticeSession: React.FC = () => {
     sessionComplete,
     handleNumberClick,
     handleResetInput,
-    handleCheckAnswer
+    handleCheckAnswer,
+    restartSession
   } = usePracticeSession(levelId, level);
   
   if (questions.length === 0) {
@@ -37,7 +38,8 @@ const PracticeSession: React.FC = () => {
   const currentQuestion = sessionComplete ? null : questions[currentIndex];
   
   const handleContinuePractice = () => {
-    navigate('/practice');
+    // Restart the session with the same level instead of navigating to practice menu
+    restartSession();
   };
   
   const handleGetHelp = () => {

@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
@@ -23,101 +24,102 @@ export const usePracticeSession = (levelId: string | undefined, level: MathLevel
     isStruggling: boolean;
   }>({ isMastered: false, isStruggling: false });
 
-  useEffect(() => {
+  // Function to generate and set new questions
+  const fetchQuestionsWithMasteryInfo = async () => {
     if (!levelId || !level) {
       navigate('/practice');
       return;
     }
     
-    const fetchQuestionsWithMasteryInfo = async () => {
-      const questionSet = generateQuestionSet(
-        level.operation,
-        10, // Changed from 5 to 10 questions
-        level.range[0],
-        level.range[1]
-      );
-      
-      console.log('Current user state:', user);
-      
-      if (!user) {
-        console.log('User object is completely missing. Performance tracking disabled.');
-        toast.warning('Log in to track your progress and mastery');
-        setQuestions(questionSet);
-        return;
-      }
-      
-      console.log('User ID:', user.id);
-      
-      const { data: { session } } = await supabase.auth.getSession();
-      console.log('Current Supabase session:', session);
-      
-      if (!session) {
-        console.log('No active Supabase session. Performance tracking disabled.');
-        toast.warning('Your session has expired. Please log in again to track progress.');
-        setQuestions(questionSet);
-        return;
-      }
-      
-      try {
-        console.log('Fetching performance data for user:', user.id);
-        const { data: performanceData, error } = await supabase
-          .from('user_question_performance')
-          .select('*')
-          .eq('user_id', user.id)
-          .eq('operation', level.operation)
-          .in('num1', questionSet.map(q => q.num1))
-          .in('num2', questionSet.map(q => q.num2));
-          
-        if (error) {
-          console.error('Error fetching performance data:', error);
-          toast.error('Could not retrieve your past performance data');
-          setQuestions(questionSet);
-          return;
-        }
-        
-        console.log('Performance data retrieved:', performanceData);
-        
-        const enhancedQuestions = questionSet.map(question => {
-          const performance = performanceData?.find(p => 
-            p.operation === question.operation && 
-            p.num1 === question.num1 && 
-            p.num2 === question.num2
-          );
-          
-          return {
-            ...question,
-            performance: performance ? {
-              attempts: performance.attempts,
-              correctAttempts: performance.correct_attempts,
-              fastCorrectAttempts: performance.fast_correct_attempts,
-              consecutiveIncorrect: performance.consecutive_incorrect,
-              isMastered: performance.fast_correct_attempts >= 5,
-              isStruggling: performance.consecutive_incorrect >= 2
-            } : {
-              attempts: 0,
-              correctAttempts: 0,
-              fastCorrectAttempts: 0,
-              consecutiveIncorrect: 0,
-              isMastered: false,
-              isStruggling: false
-            }
-          };
-        });
-        
-        setQuestions(enhancedQuestions);
-        
-        if (enhancedQuestions.length > 0 && enhancedQuestions[0].performance) {
-          setMasteryInfo({
-            isMastered: enhancedQuestions[0].performance.isMastered,
-            isStruggling: enhancedQuestions[0].performance.isStruggling
-          });
-        }
-      } catch (error) {
-        console.error('Error processing questions:', error);
-        setQuestions(questionSet);
-      }
-    };
+    const questionSet = generateQuestionSet(
+      level.operation,
+      10, // Changed from 5 to 10 questions
+      level.range[0],
+      level.range[1]
+    );
     
+    console.log('Current user state:', user);
+    
+    if (!user) {
+      console.log('User object is completely missing. Performance tracking disabled.');
+      toast.warning('Log in to track your progress and mastery');
+      setQuestions(questionSet);
+      return;
+    }
+    
+    console.log('User ID:', user.id);
+    
+    const { data: { session } } = await supabase.auth.getSession();
+    console.log('Current Supabase session:', session);
+    
+    if (!session) {
+      console.log('No active Supabase session. Performance tracking disabled.');
+      toast.warning('Your session has expired. Please log in again to track progress.');
+      setQuestions(questionSet);
+      return;
+    }
+    
+    try {
+      console.log('Fetching performance data for user:', user.id);
+      const { data: performanceData, error } = await supabase
+        .from('user_question_performance')
+        .select('*')
+        .eq('user_id', user.id)
+        .eq('operation', level.operation)
+        .in('num1', questionSet.map(q => q.num1))
+        .in('num2', questionSet.map(q => q.num2));
+        
+      if (error) {
+        console.error('Error fetching performance data:', error);
+        toast.error('Could not retrieve your past performance data');
+        setQuestions(questionSet);
+        return;
+      }
+      
+      console.log('Performance data retrieved:', performanceData);
+      
+      const enhancedQuestions = questionSet.map(question => {
+        const performance = performanceData?.find(p => 
+          p.operation === question.operation && 
+          p.num1 === question.num1 && 
+          p.num2 === question.num2
+        );
+        
+        return {
+          ...question,
+          performance: performance ? {
+            attempts: performance.attempts,
+            correctAttempts: performance.correct_attempts,
+            fastCorrectAttempts: performance.fast_correct_attempts,
+            consecutiveIncorrect: performance.consecutive_incorrect,
+            isMastered: performance.fast_correct_attempts >= 5,
+            isStruggling: performance.consecutive_incorrect >= 2
+          } : {
+            attempts: 0,
+            correctAttempts: 0,
+            fastCorrectAttempts: 0,
+            consecutiveIncorrect: 0,
+            isMastered: false,
+            isStruggling: false
+          }
+        };
+      });
+      
+      setQuestions(enhancedQuestions);
+      
+      if (enhancedQuestions.length > 0 && enhancedQuestions[0].performance) {
+        setMasteryInfo({
+          isMastered: enhancedQuestions[0].performance.isMastered,
+          isStruggling: enhancedQuestions[0].performance.isStruggling
+        });
+      }
+    } catch (error) {
+      console.error('Error processing questions:', error);
+      setQuestions(questionSet);
+    }
+  };
+
+  useEffect(() => {
     fetchQuestionsWithMasteryInfo();
   }, [levelId, level, navigate, user]);
   
@@ -136,6 +138,21 @@ export const usePracticeSession = (levelId: string | undefined, level: MathLevel
       }
     }
   }, [currentIndex, questions]);
+  
+  // Add function to restart the session with the same level
+  const restartSession = () => {
+    setCurrentIndex(0);
+    setUserInput('');
+    setShowFeedback(false);
+    setScore(0);
+    setSessionComplete(false);
+    setAnswerTime(0);
+    
+    // Generate new questions for the same level
+    fetchQuestionsWithMasteryInfo();
+    
+    toast.success('Starting a new practice session');
+  };
   
   const updateQuestionPerformance = async (
     question: MathQuestion, 
@@ -299,6 +316,7 @@ export const usePracticeSession = (levelId: string | undefined, level: MathLevel
     sessionComplete,
     handleNumberClick,
     handleResetInput,
-    handleCheckAnswer
+    handleCheckAnswer,
+    restartSession
   };
 };
