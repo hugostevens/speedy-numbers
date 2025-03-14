@@ -4,7 +4,7 @@ import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from '
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Loader2, CheckCircle2 } from 'lucide-react';
-import { createClient } from '@/integrations/supabase/client';
+import { supabase } from '@/integrations/supabase/client';
 
 interface AskQuestionDialogProps {
   open: boolean;
@@ -16,8 +16,6 @@ const AskQuestionDialog: React.FC<AskQuestionDialogProps> = ({ open, onOpenChang
   const [answer, setAnswer] = useState('');
   const [status, setStatus] = useState<'idle' | 'loading' | 'success' | 'error'>('idle');
   const [error, setError] = useState('');
-  
-  const supabase = createClient();
   
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
