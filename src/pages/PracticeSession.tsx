@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
@@ -100,7 +99,6 @@ const PracticeSession: React.FC = () => {
   const handleNumberClick = (num: number) => {
     if (showFeedback) return;
     
-    // Limit to 2 digits for simplicity
     if (userInput.length < 2) {
       setUserInput(prev => prev + num);
     }
@@ -112,6 +110,12 @@ const PracticeSession: React.FC = () => {
     setUserInput(prev => prev.slice(0, -1));
   };
   
+  const handleResetInput = () => {
+    if (showFeedback) return;
+    
+    setUserInput('');
+  };
+  
   const handleCheckAnswer = () => {
     if (!userInput || showFeedback) return;
     
@@ -119,7 +123,6 @@ const PracticeSession: React.FC = () => {
     const currentQuestion = questions[currentIndex];
     const isCorrect = userAnswer === currentQuestion.answer;
     
-    // Update question with user's answer
     const updatedQuestions = [...questions];
     updatedQuestions[currentIndex] = {
       ...currentQuestion,
@@ -134,23 +137,18 @@ const PracticeSession: React.FC = () => {
       setScore(prev => prev + 1);
     }
     
-    // Move to next question after a delay
     setTimeout(() => {
       if (currentIndex < questions.length - 1) {
         setCurrentIndex(prev => prev + 1);
         setUserInput('');
         setShowFeedback(false);
       } else {
-        // Session completed
         const percentCorrect = (score + (isCorrect ? 1 : 0)) / questions.length * 100;
         
-        // Update daily goal
         updateDailyGoal(1);
         
-        // Show completion message
         toast.success(`Practice completed! Score: ${score + (isCorrect ? 1 : 0)}/${questions.length}`);
         
-        // Navigate back to practice menu
         setTimeout(() => {
           navigate('/practice');
         }, 2000);
@@ -193,19 +191,30 @@ const PracticeSession: React.FC = () => {
       />
       
       <div className="mt-6">
-        {!showFeedback && (
-          <button
-            onClick={handleCheckAnswer}
-            disabled={!userInput}
-            className={`w-full py-3 rounded-lg mb-6 transition-colors ${
-              userInput
-                ? 'bg-primary text-primary-foreground hover:bg-primary/90'
-                : 'bg-muted/70 text-muted-foreground cursor-not-allowed'
-            }`}
-          >
-            Check Answer
-          </button>
-        )}
+        <div className="flex justify-between gap-2 mb-6">
+          {!showFeedback && userInput && (
+            <button
+              onClick={handleResetInput}
+              className="py-3 px-4 rounded-lg bg-muted/70 text-muted-foreground hover:bg-muted/90 transition-colors"
+            >
+              Clear
+            </button>
+          )}
+          
+          {!showFeedback && (
+            <button
+              onClick={handleCheckAnswer}
+              disabled={!userInput}
+              className={`flex-1 py-3 rounded-lg transition-colors ${
+                userInput
+                  ? 'bg-primary text-primary-foreground hover:bg-primary/90'
+                  : 'bg-muted/70 text-muted-foreground cursor-not-allowed'
+              }`}
+            >
+              Check Answer
+            </button>
+          )}
+        </div>
         
         <NumberPad
           onNumberClick={handleNumberClick}

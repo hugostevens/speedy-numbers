@@ -1,6 +1,5 @@
 
 import React from 'react';
-import { Delete } from 'lucide-react';
 
 interface NumberPadProps {
   onNumberClick: (num: number) => void;
@@ -19,18 +18,14 @@ const NumberPad: React.FC<NumberPadProps> = ({ onNumberClick, onDeleteClick }) =
           {num}
         </button>
       ))}
-      <button
-        className="number-pad-button h-16"
-        onClick={() => onNumberClick(0)}
-      >
-        0
-      </button>
-      <button
-        className="number-pad-button h-16 col-span-2 bg-muted/50"
-        onClick={onDeleteClick}
-      >
-        <Delete size={20} className="mr-2" /> Delete
-      </button>
+      <div className="col-span-3 flex justify-center">
+        <button
+          className="number-pad-button h-16 w-full max-w-32"
+          onClick={() => onNumberClick(0)}
+        >
+          0
+        </button>
+      </div>
     </div>
   );
 };
