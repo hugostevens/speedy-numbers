@@ -1,13 +1,13 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import PageHeader from '@/components/layout/PageHeader';
 import ResourceCard from '@/components/knowledge/ResourceCard';
 import TopicCard from '@/components/knowledge/TopicCard';
+import AskQuestionDialog from '@/components/knowledge/AskQuestionDialog';
 import { KnowledgeItem } from '@/types';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { MessageCircleQuestion } from 'lucide-react';
-import { toast } from 'sonner';
 
 const recommendedResources: KnowledgeItem[] = [
   {
@@ -39,6 +39,7 @@ const topics = [
 
 const Knowledge: React.FC = () => {
   const navigate = useNavigate();
+  const [questionDialogOpen, setQuestionDialogOpen] = useState(false);
   
   const handleResourceSelect = (resource: KnowledgeItem) => {
     // In a real app, this would navigate to a resource page
@@ -46,8 +47,7 @@ const Knowledge: React.FC = () => {
   };
 
   const handleAskQuestion = () => {
-    // In a real app, this would open a question form or chat interface
-    toast.success("Question feature coming soon!");
+    setQuestionDialogOpen(true);
   };
   
   return (
@@ -95,6 +95,11 @@ const Knowledge: React.FC = () => {
           ))}
         </div>
       </div>
+
+      <AskQuestionDialog 
+        open={questionDialogOpen} 
+        onOpenChange={setQuestionDialogOpen} 
+      />
     </div>
   );
 };
