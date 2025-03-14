@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import PageHeader from '@/components/layout/PageHeader';
 import ResourceCard from '@/components/knowledge/ResourceCard';
@@ -84,16 +83,10 @@ const Knowledge: React.FC = () => {
   const createResourceFromQuestion = (question: StruggleQuestion): KnowledgeItem => {
     const operationSymbol = getOperationSymbol(question.operation);
     
-    const matchingLevel = Object.values(levels).find(level => 
-      level.operation === question.operation && 
-      Math.max(question.num1, question.num2) >= level.range[0] && 
-      Math.max(question.num1, question.num2) <= level.range[1]
-    );
-    
     return {
       id: question.id,
       title: `${question.num1} ${operationSymbol} ${question.num2} = ${question.answer}`,
-      description: `Learn strategies for ${matchingLevel?.name || question.operation} problems`,
+      description: '',
       type: 'interactive',
       tags: [question.operation]
     };
