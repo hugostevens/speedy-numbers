@@ -35,15 +35,9 @@ const NumberPad: React.FC<NumberPadProps> = ({ onNumberClick, onDeleteClick }) =
           {num}
         </button>
       ))}
-      <div className="col-span-3 flex justify-between">
+      <div className="col-span-3 flex justify-center">
         <button
-          className="number-pad-button h-16 w-full mr-3 text-2xl font-bold rounded-xl shadow-md transform transition-all duration-150 active:scale-95 bg-red-100 hover:bg-red-200 text-red-700"
-          onClick={onDeleteClick}
-        >
-          ⌫
-        </button>
-        <button
-          className="number-pad-button h-16 w-full text-2xl font-bold rounded-xl shadow-md transform transition-all duration-150 active:scale-95 bg-primary/20 hover:bg-primary/30 text-primary"
+          className="number-pad-button h-16 w-full max-w-32 text-2xl font-bold rounded-xl shadow-md transform transition-all duration-150 active:scale-95 bg-primary/20 hover:bg-primary/30 text-primary"
           onClick={() => onNumberClick(0)}
         >
           0

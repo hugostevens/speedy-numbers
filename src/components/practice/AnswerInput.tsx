@@ -77,12 +77,6 @@ const AnswerInput: React.FC<AnswerInputProps> = ({
         )}
       </div>
       
-      <div className="mb-6 text-center">
-        <p className="text-sm text-muted-foreground">
-          Type your answer using keyboard or tap the numbers below
-        </p>
-      </div>
-      
       <NumberPad
         onNumberClick={onNumberClick}
         onDeleteClick={onResetInput}
