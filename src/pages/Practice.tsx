@@ -235,7 +235,7 @@ const Practice: React.FC = () => {
   if (isLoading) {
     return (
       <div className="page-container">
-        <PageHeader title="Practice" showBackButton />
+        <PageHeader title="Practice" showBackButton backPath="/" />
         <div className="flex justify-center items-center h-64">
           <div className="animate-pulse text-lg">Loading your progress...</div>
         </div>
@@ -245,7 +245,7 @@ const Practice: React.FC = () => {
   
   return (
     <div className="page-container">
-      <PageHeader title="Practice" showBackButton />
+      <PageHeader title="Practice" showBackButton backPath="/" />
       
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         {Object.values(levels).map(level => {
