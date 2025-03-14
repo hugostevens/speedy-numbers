@@ -37,7 +37,7 @@ const LearningSection: React.FC = () => {
               <Lightbulb size={24} />
             </div>
             <div className="flex-1">
-              <h3 className="text-lg font-medium mb-1">Knowledge</h3>
+              <h3 className="text-lg font-medium mb-1">Tips & Tricks</h3>
               <p className="text-muted-foreground text-sm mb-4">
                 Learn tips and tricks
               </p>
