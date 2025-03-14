@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
@@ -50,22 +51,56 @@ const PracticeSession: React.FC = () => {
   const [userInput, setUserInput] = useState('');
   const [showFeedback, setShowFeedback] = useState(false);
   const [score, setScore] = useState(0);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   
   useEffect(() => {
-    if (!levelId || !levels[levelId]) {
+    // Reset state when component mounts
+    setQuestions([]);
+    setCurrentIndex(0);
+    setUserInput('');
+    setShowFeedback(false);
+    setScore(0);
+    setIsLoading(true);
+    setError(null);
+    
+    if (!levelId) {
+      setError("No level selected");
+      setIsLoading(false);
+      return;
+    }
+    
+    if (!levels[levelId]) {
+      setError(`Invalid level: ${levelId}`);
+      setIsLoading(false);
+      toast.error("Invalid practice level selected");
       navigate('/practice');
       return;
     }
     
-    const level = levels[levelId];
-    const questionSet = generateQuestionSet(
-      level.operation,
-      5,
-      level.range[0],
-      level.range[1]
-    );
-    
-    setQuestions(questionSet);
+    try {
+      const level = levels[levelId];
+      const questionSet = generateQuestionSet(
+        level.operation,
+        5,
+        level.range[0],
+        level.range[1]
+      );
+      
+      console.log("Generated question set:", questionSet);
+      
+      if (questionSet.length === 0) {
+        throw new Error("Failed to generate questions");
+      }
+      
+      setQuestions(questionSet);
+      setIsLoading(false);
+    } catch (err) {
+      console.error("Error generating questions:", err);
+      setError("Failed to load questions");
+      setIsLoading(false);
+      toast.error("Error loading practice session");
+    }
   }, [levelId, navigate]);
   
   const handleNumberClick = (num: number) => {
@@ -122,8 +157,37 @@ const PracticeSession: React.FC = () => {
     }, 1500);
   };
   
-  if (questions.length === 0) {
-    return <div className="page-container">Loading...</div>;
+  if (isLoading) {
+    return (
+      <div className="page-container">
+        <PageHeader title="Practice" showBackButton />
+        <div className="flex items-center justify-center h-[50vh]">
+          <div className="text-center">
+            <div className="mb-4 text-muted-foreground">Loading practice questions...</div>
+            <Progress value={100} className="h-2 w-40 animate-pulse" />
+          </div>
+        </div>
+      </div>
+    );
+  }
+  
+  if (error || questions.length === 0) {
+    return (
+      <div className="page-container">
+        <PageHeader title="Practice" showBackButton />
+        <div className="flex flex-col items-center justify-center h-[50vh] gap-4">
+          <div className="text-lg font-medium text-center text-destructive">
+            {error || "No questions available for this level."}
+          </div>
+          <button
+            onClick={() => navigate('/practice')}
+            className="bg-primary text-primary-foreground hover:bg-primary/90 px-4 py-2 rounded-lg"
+          >
+            Back to Practice Menu
+          </button>
+        </div>
+      </div>
+    );
   }
   
   const level = levels[levelId!];
