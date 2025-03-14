@@ -1,12 +1,20 @@
 
 import React from 'react';
+import { CheckCircle, RotateCcw } from 'lucide-react';
 
 interface NumberPadProps {
   onNumberClick: (num: number) => void;
   onDeleteClick: () => void;
+  onCheckAnswer: () => void;
+  userInput: string;
 }
 
-const NumberPad: React.FC<NumberPadProps> = ({ onNumberClick, onDeleteClick }) => {
+const NumberPad: React.FC<NumberPadProps> = ({ 
+  onNumberClick, 
+  onDeleteClick,
+  onCheckAnswer,
+  userInput
+}) => {
   // Colors for the number buttons
   const getButtonColor = (num: number) => {
     const colors = [
@@ -35,14 +43,25 @@ const NumberPad: React.FC<NumberPadProps> = ({ onNumberClick, onDeleteClick }) =
           {num}
         </button>
       ))}
-      <div className="col-span-3 flex justify-center">
-        <button
-          className="number-pad-button h-16 w-full max-w-32 text-2xl font-bold rounded-xl shadow-md transform transition-all duration-150 active:scale-95 bg-primary/20 hover:bg-primary/30 text-primary"
-          onClick={() => onNumberClick(0)}
-        >
-          0
-        </button>
-      </div>
+      <button
+        className="number-pad-button h-16 text-2xl font-bold rounded-xl shadow-md transform transition-all duration-150 active:scale-95 bg-red-100 hover:bg-red-200 text-red-700"
+        onClick={onDeleteClick}
+      >
+        <RotateCcw className="h-6 w-6" />
+      </button>
+      <button
+        className="number-pad-button h-16 text-2xl font-bold rounded-xl shadow-md transform transition-all duration-150 active:scale-95 bg-primary/20 hover:bg-primary/30 text-primary"
+        onClick={() => onNumberClick(0)}
+      >
+        0
+      </button>
+      <button
+        className="number-pad-button h-16 text-2xl font-bold rounded-xl shadow-md transform transition-all duration-150 active:scale-95 bg-green-100 hover:bg-green-200 text-green-700"
+        onClick={onCheckAnswer}
+        disabled={!userInput}
+      >
+        <CheckCircle className="h-6 w-6" />
+      </button>
     </div>
   );
 };
