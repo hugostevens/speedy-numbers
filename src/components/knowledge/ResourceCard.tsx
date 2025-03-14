@@ -1,6 +1,6 @@
 
 import React, { useState } from 'react';
-import { KnowledgeItem } from '@/types';
+import { KnowledgeItem, MathOperation } from '@/types';
 import { Video, BookOpen, Play, HelpCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import QuestionHelpDialog from './QuestionHelpDialog';
@@ -10,7 +10,7 @@ interface ResourceCardProps {
   onSelect: (resource: KnowledgeItem) => void;
   num1?: number;
   num2?: number;
-  operation?: any; // This will be properly typed from the parent
+  operation?: MathOperation;
   answer?: number;
   showHelpButton?: boolean;
 }
