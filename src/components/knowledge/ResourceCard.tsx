@@ -1,7 +1,7 @@
 
 import React, { useState } from 'react';
 import { KnowledgeItem, MathOperation } from '@/types';
-import { Video, BookOpen, Play, HelpCircle } from 'lucide-react';
+import { Video, BookOpen, Play, HelpCircle, AlertCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import QuestionHelpDialog from './QuestionHelpDialog';
 
@@ -28,6 +28,12 @@ const ResourceCard: React.FC<ResourceCardProps> = ({
   const [helpDialogOpen, setHelpDialogOpen] = useState(false);
   
   const getIcon = () => {
+    // For struggling questions (with help button), use a different icon
+    if (showHelpButton) {
+      return <AlertCircle size={20} />;
+    }
+    
+    // For regular resources, use the type-based icon
     switch (type) {
       case 'video':
         return <Video size={20} />;
@@ -65,11 +71,13 @@ const ResourceCard: React.FC<ResourceCardProps> = ({
             <h3 className="font-medium mb-1">{title}</h3>
             <p className="text-sm text-muted-foreground">{description}</p>
             
-            <div className="flex mt-2">
-              <span className="inline-flex items-center text-xs bg-muted px-2 py-1 rounded-full">
-                {type.charAt(0).toUpperCase() + type.slice(1)}
-              </span>
-            </div>
+            {!showHelpButton && (
+              <div className="flex mt-2">
+                <span className="inline-flex items-center text-xs bg-muted px-2 py-1 rounded-full">
+                  {type.charAt(0).toUpperCase() + type.slice(1)}
+                </span>
+              </div>
+            )}
           </div>
           
           {showHelpButton && num1 !== undefined && num2 !== undefined && operation && (
