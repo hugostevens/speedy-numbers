@@ -7,7 +7,7 @@ import AskQuestionDialog from '@/components/knowledge/AskQuestionDialog';
 import { KnowledgeItem } from '@/types';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
-import { MessageCircleQuestion } from 'lucide-react';
+import { MessageCircleQuestion, Video } from 'lucide-react';
 import { levels } from '@/data/mathLevels';
 import { useIsMobile } from '@/hooks/use-mobile';
 
@@ -67,7 +67,21 @@ const Knowledge: React.FC = () => {
       </div>
       
       <div>
-        <h2 className="text-lg font-semibold mb-4">All Topics</h2>
+        <h2 className="text-lg font-semibold mb-2">All Topics</h2>
+        <div className="flex flex-wrap items-center justify-between mb-4">
+          <p className="text-sm text-muted-foreground">
+            Learn different ways to add, subtract, multiply, and divide
+          </p>
+          
+          <div className="flex items-center mt-1 md:mt-0">
+            <div className="math-icon-container h-6 w-6 mr-1">
+              <Video size={16} />
+            </div>
+            <span className="text-xs bg-muted px-2 py-1 rounded-full">
+              Video
+            </span>
+          </div>
+        </div>
         
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           {Object.values(levels).map(level => (
