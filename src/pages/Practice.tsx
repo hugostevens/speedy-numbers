@@ -57,42 +57,92 @@ const Practice: React.FC = () => {
         });
         
         // Process performance data to determine mastered levels
-        const operationRangeProgress: Record<string, Record<string, number>> = {};
+        const operationRangeProgress: Record<string, Record<string, { mastered: number, total: number }>> = {};
         
         // Initialize the progress tracking structure
         Object.values(levels).forEach(level => {
           if (!operationRangeProgress[level.operation]) {
             operationRangeProgress[level.operation] = {};
           }
-          operationRangeProgress[level.operation][`${level.range[0]}-${level.range[1]}`] = 0;
+          operationRangeProgress[level.operation][`${level.range[0]}-${level.range[1]}`] = {
+            mastered: 0,
+            total: 0
+          };
         });
         
-        // Calculate mastery percentage for each level
+        // Calculate potential facts in each level based on range
+        // For each operation and range, count how many possible questions exist
+        Object.values(levels).forEach(level => {
+          const rangeKey = `${level.range[0]}-${level.range[1]}`;
+          const { operation, range } = level;
+          
+          let totalPossibleFacts = 0;
+          
+          // For addition and multiplication, count all possible combinations
+          if (operation === 'addition' || operation === 'multiplication') {
+            for (let i = range[0]; i <= range[1]; i++) {
+              for (let j = range[0]; j <= range[1]; j++) {
+                totalPossibleFacts++;
+              }
+            }
+          }
+          // For subtraction, only count where result ≥ 0
+          else if (operation === 'subtraction') {
+            for (let i = range[0]; i <= range[1]; i++) {
+              for (let j = range[0]; j <= i; j++) {
+                totalPossibleFacts++;
+              }
+            }
+          }
+          // For division, only count where division is exact
+          else if (operation === 'division') {
+            for (let i = range[0]; i <= range[1]; i++) {
+              for (let j = 1; j <= range[1]; j++) {
+                if (i % j === 0 && i / j <= range[1]) {
+                  totalPossibleFacts++;
+                }
+              }
+            }
+          }
+          
+          operationRangeProgress[operation][rangeKey].total = totalPossibleFacts;
+        });
+        
+        // Count mastered facts from user performance data
         data?.forEach(item => {
           Object.values(levels).forEach(level => {
-            const num = Math.max(item.num1, item.num2);
-            if (item.operation === level.operation && 
-                num >= level.range[0] && 
-                num <= level.range[1]) {
+            const { operation, range } = level;
+            
+            // Check if this item belongs to this level's operation and range
+            if (item.operation === operation && 
+                item.num1 >= range[0] && item.num1 <= range[1] && 
+                item.num2 >= range[0] && item.num2 <= range[1]) {
+              
+              // Consider it mastered if there are at least 5 fast correct attempts
               if (item.fast_correct_attempts >= 5) {
-                const rangeKey = `${level.range[0]}-${level.range[1]}`;
-                operationRangeProgress[level.operation][rangeKey]++;
+                const rangeKey = `${range[0]}-${range[1]}`;
+                operationRangeProgress[operation][rangeKey].mastered++;
               }
             }
           });
         });
         
-        // Determine the highest mastered level and make the next one available
+        // Calculate mastery percentage for each level
         const masteredLevels: string[] = [];
-        Object.values(levels).forEach(level => {
+        Object.entries(levels).forEach(([levelId, level]) => {
           const rangeKey = `${level.range[0]}-${level.range[1]}`;
-          const masteryCount = operationRangeProgress[level.operation][rangeKey];
+          const progress = operationRangeProgress[level.operation][rangeKey];
           
-          // Consider a level mastered if at least 10 facts are mastered
-          // This threshold can be adjusted based on your requirements
-          if (masteryCount >= 10) {
-            status[level.id] = 'mastered';
-            masteredLevels.push(level.id);
+          // Calculate mastery percentage - prevent division by zero
+          const masteryPercentage = progress.total > 0 ? 
+            (progress.mastered / progress.total) * 100 : 0;
+          
+          console.log(`Level ${levelId}: ${progress.mastered}/${progress.total} mastered (${masteryPercentage.toFixed(1)}%)`);
+          
+          // Consider a level mastered if at least 80% of facts are mastered
+          if (masteryPercentage >= 80) {
+            status[levelId] = 'mastered';
+            masteredLevels.push(levelId);
           }
         });
         
