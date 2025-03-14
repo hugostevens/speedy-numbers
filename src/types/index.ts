@@ -56,13 +56,13 @@ export type UserProfile = {
     date: string;
     action: string;
   }[];
-  session: any;
+  session?: any; // Made session optional with ?
 };
 
 export type KnowledgeItem = {
   id: string;
   title: string;
   description: string;
-  type: 'video' | 'interactive' | 'reading';
+  type: 'video' | 'interactive' | 'reading' | 'audio' | 'visual'; // Updated to include new types
   tags: string[];
 };
