@@ -1,15 +1,18 @@
-
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { UserProfile, Badge } from '@/types';
 import { toast } from 'sonner';
+import { supabase } from '@/integrations/supabase/client';
+import { Session } from '@supabase/supabase-js';
 
 interface UserContextType {
   user: UserProfile | null;
+  session: Session | null;
   isLoading: boolean;
   updateStreak: (increment: boolean) => void;
   updateDailyGoal: (progress: number) => void;
   addBadge: (badge: Badge) => void;
   updateTheme: (theme: string) => void;
+  signOut: () => Promise<void>;
 }
 
 const initialBadges: Badge[] = [
@@ -80,27 +83,60 @@ const initialUser: UserProfile = {
 
 const UserContext = createContext<UserContextType>({
   user: null,
+  session: null,
   isLoading: true,
   updateStreak: () => {},
   updateDailyGoal: () => {},
   addBadge: () => {},
   updateTheme: () => {},
+  signOut: async () => {},
 });
 
 export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [user, setUser] = useState<UserProfile | null>(null);
+  const [session, setSession] = useState<Session | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
-  // Simulate loading user data
   useEffect(() => {
-    const loadUser = async () => {
-      // In a real app, this would be an API call
-      await new Promise(resolve => setTimeout(resolve, 500));
-      setUser(initialUser);
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(
+      (_event, session) => {
+        setSession(session);
+        setIsLoading(false);
+        
+        if (session?.user) {
+          setUser({
+            ...initialUser,
+            id: session.user.id,
+            name: session.user.email?.split('@')[0] || 'User',
+            avatar: session.user.email?.substring(0, 2).toUpperCase() || 'U',
+          });
+        } else {
+          setUser(null);
+        }
+      }
+    );
+
+    const checkSession = async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+      setSession(session);
+      
+      if (session?.user) {
+        setUser({
+          ...initialUser,
+          id: session.user.id,
+          name: session.user.email?.split('@')[0] || 'User',
+          avatar: session.user.email?.substring(0, 2).toUpperCase() || 'U',
+        });
+      }
+      
       setIsLoading(false);
     };
     
-    loadUser();
+    checkSession();
+
+    return () => {
+      subscription.unsubscribe();
+    };
   }, []);
 
   const updateStreak = (increment: boolean) => {
@@ -148,12 +184,10 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
       const existingBadgeIndex = prev.badges.findIndex(b => b.id === badge.id);
       
       if (existingBadgeIndex >= 0) {
-        // Update existing badge
         const updatedBadges = [...prev.badges];
         updatedBadges[existingBadgeIndex] = badge;
         return { ...prev, badges: updatedBadges };
       } else {
-        // Add new badge
         toast.success(`🏆 New badge: ${badge.name}`);
         return { ...prev, badges: [...prev.badges, badge] };
       }
@@ -169,14 +203,23 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
     });
   };
 
+  const signOut = async () => {
+    await supabase.auth.signOut();
+    setUser(null);
+    setSession(null);
+    toast.success('Signed out successfully');
+  };
+
   return (
     <UserContext.Provider value={{ 
       user, 
+      session,
       isLoading, 
       updateStreak, 
       updateDailyGoal, 
       addBadge,
-      updateTheme
+      updateTheme,
+      signOut
     }}>
       {children}
     </UserContext.Provider>

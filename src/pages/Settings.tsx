@@ -5,7 +5,6 @@ import PageHeader from '@/components/layout/PageHeader';
 import SettingsGroup from '@/components/settings/SettingsGroup';
 import SettingsItem from '@/components/settings/SettingsItem';
 import { useUser } from '@/context/UserContext';
-import { toast } from 'sonner';
 import { 
   Palette, 
   Target, 
@@ -13,19 +12,19 @@ import {
   UserCog,
   LogOut
 } from 'lucide-react';
+import { Button } from '@/components/ui/button';
 
 const Settings: React.FC = () => {
   const navigate = useNavigate();
-  const { user } = useUser();
+  const { user, signOut } = useUser();
   
   if (!user) {
     return <div className="page-container">Loading...</div>;
   }
   
-  const handleSignOut = () => {
-    // In a real app, this would sign the user out
-    toast.success('Signed out successfully');
-    navigate('/');
+  const handleSignOut = async () => {
+    await signOut();
+    navigate('/auth');
   };
   
   return (
@@ -61,13 +60,14 @@ const Settings: React.FC = () => {
         />
       </SettingsGroup>
       
-      <button
+      <Button
         onClick={handleSignOut}
-        className="w-full py-3 border border-gray-200 rounded-lg flex items-center justify-center gap-2"
+        variant="outline"
+        className="w-full py-6 mt-6 border border-gray-200 rounded-lg flex items-center justify-center gap-2"
       >
         <LogOut size={18} />
         <span>Sign Out</span>
-      </button>
+      </Button>
     </div>
   );
 };
