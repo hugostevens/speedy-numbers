@@ -1,6 +1,8 @@
 
 import React from 'react';
 import NumberPad from '@/components/practice/NumberPad';
+import { Button } from '@/components/ui/button';
+import { CheckCircle, RotateCcw } from 'lucide-react';
 
 interface AnswerInputProps {
   userInput: string;
@@ -18,29 +20,32 @@ const AnswerInput: React.FC<AnswerInputProps> = ({
   onCheckAnswer,
 }) => {
   return (
-    <div className="mt-6">
-      <div className="flex justify-between gap-2 mb-6">
+    <div className="mt-8">
+      <div className="flex justify-between gap-3 mb-6">
         {!showFeedback && userInput && (
-          <button
+          <Button
             onClick={onResetInput}
-            className="py-3 px-4 rounded-lg bg-muted/70 text-muted-foreground hover:bg-muted/90 transition-colors"
+            variant="outline"
+            className="py-6 px-5 rounded-xl bg-muted/70 text-muted-foreground hover:bg-muted/90 transition-all duration-200 transform hover:scale-105"
           >
+            <RotateCcw className="mr-2 h-5 w-5" />
             Clear
-          </button>
+          </Button>
         )}
         
         {!showFeedback && (
-          <button
+          <Button
             onClick={onCheckAnswer}
             disabled={!userInput}
-            className={`flex-1 py-3 rounded-lg transition-colors ${
+            className={`flex-1 py-6 rounded-xl transition-all duration-200 transform hover:scale-105 ${
               userInput
                 ? 'bg-primary text-primary-foreground hover:bg-primary/90'
                 : 'bg-muted/70 text-muted-foreground cursor-not-allowed'
             }`}
           >
+            <CheckCircle className="mr-2 h-5 w-5" />
             Check Answer
-          </button>
+          </Button>
         )}
       </div>
       

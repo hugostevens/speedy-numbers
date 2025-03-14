@@ -23,19 +23,19 @@ const MathProblem: React.FC<MathProblemProps> = ({
   
   return (
     <div className="text-center py-8">
-      <div className="text-4xl font-bold mb-6">
+      <div className="text-5xl font-bold mb-8 bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent animate-float">
         {num1} {operationSymbol} {num2} = ?
       </div>
       
       <div className="relative">
         <input
           type="text"
-          className={`text-center text-2xl font-bold py-3 px-4 border-2 rounded-lg w-32 mx-auto block ${
+          className={`text-center text-3xl font-bold py-4 px-6 border-3 rounded-xl w-36 mx-auto block shadow-md transition-all duration-300 ${
             showFeedback 
               ? isCorrect 
-                ? 'border-green-500 bg-green-50' 
-                : 'border-red-500 bg-red-50'
-              : 'border-gray-300'
+                ? 'border-green-500 bg-green-50 animate-scale-in' 
+                : 'border-red-500 bg-red-50 animate-scale-in'
+              : 'border-gray-300 hover:border-primary focus:border-primary'
           }`}
           value={userInput}
           readOnly
@@ -43,13 +43,13 @@ const MathProblem: React.FC<MathProblemProps> = ({
         
         {showFeedback && (
           <div 
-            className={`absolute top-full left-0 right-0 mt-2 text-sm font-medium ${
+            className={`absolute top-full left-0 right-0 mt-3 text-lg font-medium animate-fade-in ${
               isCorrect ? 'text-green-500' : 'text-red-500'
             }`}
           >
             {isCorrect 
-              ? (isFast ? 'That was fast!' : 'Correct!')
-              : `Incorrect. The answer is ${answer}.`}
+              ? (isFast ? '⚡ That was fast! ⚡' : '🎉 Correct! 🎉')
+              : `❌ Incorrect. The answer is ${answer}.`}
           </div>
         )}
       </div>
