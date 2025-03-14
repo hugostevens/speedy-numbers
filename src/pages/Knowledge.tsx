@@ -117,7 +117,11 @@ const Knowledge: React.FC = () => {
   
   return (
     <div className="page-container">
-      <PageHeader title="Tips & Tricks" showBackButton />
+      <PageHeader 
+        title="Tips & Tricks" 
+        showBackButton 
+        backPath="/" // Set explicit back path to main page
+      />
       
       <div className="mb-6">
         {isLoading ? (
