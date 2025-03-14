@@ -9,6 +9,7 @@ import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { MessageCircleQuestion } from 'lucide-react';
 import { levels } from '@/data/mathLevels';
+import { useIsMobile } from '@/hooks/use-mobile';
 
 const recommendedResources: KnowledgeItem[] = [
   {
@@ -22,6 +23,7 @@ const recommendedResources: KnowledgeItem[] = [
 
 const Knowledge: React.FC = () => {
   const navigate = useNavigate();
+  const isMobile = useIsMobile();
   const [questionDialogOpen, setQuestionDialogOpen] = useState(false);
   
   const handleResourceSelect = (resource: KnowledgeItem) => {
@@ -67,7 +69,7 @@ const Knowledge: React.FC = () => {
       <div>
         <h2 className="text-lg font-semibold mb-4">All Topics</h2>
         
-        <div className="space-y-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           {Object.values(levels).map(level => (
             <TopicCard
               key={level.id}
