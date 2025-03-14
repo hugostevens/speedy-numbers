@@ -7,11 +7,14 @@ import SessionHeader from '@/components/practice/SessionHeader';
 import AnswerInput from '@/components/practice/AnswerInput';
 import { usePracticeSession } from '@/hooks/usePracticeSession';
 import { levels } from '@/data/mathLevels';
-import { Award, AlertCircle, Check } from 'lucide-react';
+import { Award, AlertCircle, Check, ArrowRight, MessageSquareQuestion, Home } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { useNavigate } from 'react-router-dom';
 
 const PracticeSession: React.FC = () => {
   const { levelId } = useParams<{ levelId: string }>();
   const level = levelId ? levels[levelId] : undefined;
+  const navigate = useNavigate();
   
   const {
     questions,
@@ -32,6 +35,18 @@ const PracticeSession: React.FC = () => {
   
   // Don't access current question if session is complete
   const currentQuestion = sessionComplete ? null : questions[currentIndex];
+  
+  const handleContinuePractice = () => {
+    navigate('/practice');
+  };
+  
+  const handleGetHelp = () => {
+    navigate('/knowledge');
+  };
+  
+  const handleFinishForNow = () => {
+    navigate('/');
+  };
   
   return (
     <div className="page-container">
@@ -89,7 +104,24 @@ const PracticeSession: React.FC = () => {
             <Check className="h-10 w-10 text-green-600" />
           </div>
           <h2 className="text-2xl font-bold mb-2">Practice Complete!</h2>
-          <p className="text-muted-foreground">Redirecting to practice menu...</p>
+          <p className="text-muted-foreground mb-8">What would you like to do next?</p>
+          
+          <div className="flex flex-col space-y-4 w-full max-w-xs mx-auto">
+            <Button onClick={handleContinuePractice} className="w-full justify-start">
+              <ArrowRight className="mr-2" />
+              Keep going
+            </Button>
+            
+            <Button onClick={handleGetHelp} variant="outline" className="w-full justify-start">
+              <MessageSquareQuestion className="mr-2" />
+              Get some help
+            </Button>
+            
+            <Button onClick={handleFinishForNow} variant="secondary" className="w-full justify-start">
+              <Home className="mr-2" />
+              Finish for now
+            </Button>
+          </div>
         </div>
       )}
     </div>

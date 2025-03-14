@@ -285,11 +285,6 @@ export const usePracticeSession = (levelId: string | undefined, level: MathLevel
         });
         
         toast.success(`Practice completed! Score: ${finalScore}/${questions.length}`);
-        
-        // Navigate away from the practice session after a delay
-        setTimeout(() => {
-          navigate('/practice');
-        }, 2000);
       }
     }, 1500);
   };
