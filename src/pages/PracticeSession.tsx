@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
@@ -78,6 +79,8 @@ const PracticeSession: React.FC = () => {
   const [userInput, setUserInput] = useState('');
   const [showFeedback, setShowFeedback] = useState(false);
   const [score, setScore] = useState(0);
+  const [startTime, setStartTime] = useState<number>(0);
+  const [answerTime, setAnswerTime] = useState<number>(0);
   
   useEffect(() => {
     if (!levelId || !levels[levelId]) {
@@ -94,7 +97,13 @@ const PracticeSession: React.FC = () => {
     );
     
     setQuestions(questionSet);
+    setStartTime(Date.now());
   }, [levelId, navigate]);
+  
+  // Reset the timer when moving to a new question
+  useEffect(() => {
+    setStartTime(Date.now());
+  }, [currentIndex]);
   
   const handleNumberClick = (num: number) => {
     if (showFeedback) return;
@@ -119,6 +128,11 @@ const PracticeSession: React.FC = () => {
   const handleCheckAnswer = () => {
     if (!userInput || showFeedback) return;
     
+    // Calculate time taken to answer
+    const endTime = Date.now();
+    const timeTaken = (endTime - startTime) / 1000; // Convert to seconds
+    setAnswerTime(timeTaken);
+    
     const userAnswer = parseInt(userInput);
     const currentQuestion = questions[currentIndex];
     const isCorrect = userAnswer === currentQuestion.answer;
@@ -127,7 +141,8 @@ const PracticeSession: React.FC = () => {
     updatedQuestions[currentIndex] = {
       ...currentQuestion,
       userAnswer,
-      isCorrect
+      isCorrect,
+      timeToAnswer: timeTaken
     };
     
     setQuestions(updatedQuestions);
@@ -188,6 +203,7 @@ const PracticeSession: React.FC = () => {
         question={currentQuestion}
         userInput={userInput}
         showFeedback={showFeedback}
+        answerTime={answerTime}
       />
       
       <div className="mt-6">

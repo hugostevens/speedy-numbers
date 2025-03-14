@@ -7,16 +7,19 @@ interface MathProblemProps {
   question: MathQuestion;
   userInput: string;
   showFeedback?: boolean;
+  answerTime?: number;
 }
 
 const MathProblem: React.FC<MathProblemProps> = ({ 
   question, 
   userInput,
-  showFeedback = false 
+  showFeedback = false,
+  answerTime = 0
 }) => {
   const { operation, num1, num2, answer } = question;
   const operationSymbol = getOperationSymbol(operation);
   const isCorrect = parseInt(userInput) === answer;
+  const isFast = isCorrect && answerTime < 3;
   
   return (
     <div className="text-center py-8">
@@ -45,7 +48,7 @@ const MathProblem: React.FC<MathProblemProps> = ({
             }`}
           >
             {isCorrect 
-              ? 'Correct!' 
+              ? (isFast ? 'That was fast!' : 'Correct!')
               : `Incorrect. The answer is ${answer}.`}
           </div>
         )}
