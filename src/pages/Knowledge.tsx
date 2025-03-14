@@ -43,11 +43,12 @@ const Knowledge: React.FC = () => {
       try {
         console.log('Fetching struggling questions for user:', user.id);
         
+        // Modified query to use >= 1 instead of > 0 for consecutive_incorrect
         const { data, error } = await supabase
           .from('user_question_performance')
           .select('*')
           .eq('user_id', user.id)
-          .gt('consecutive_incorrect', 0)
+          .gte('consecutive_incorrect', 1) // Changed from gt(0) to gte(1)
           .order('consecutive_incorrect', { ascending: false })
           .limit(3);
           
@@ -111,12 +112,13 @@ const Knowledge: React.FC = () => {
   };
   
   const handleStruggleQuestionSelect = (resource: KnowledgeItem) => {
-    console.log('Struggling question selected, but no navigation will occur');
+    console.log('Struggling question selected, navigating to help view', resource);
+    // In the future we could navigate to a dedicated help page
   };
   
   return (
     <div className="page-container">
-      <PageHeader title="Knowledge" showBackButton />
+      <PageHeader title="Tips & Tricks" showBackButton />
       
       <div className="mb-6">
         {isLoading ? (

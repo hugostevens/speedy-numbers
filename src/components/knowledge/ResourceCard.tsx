@@ -30,7 +30,7 @@ const ResourceCard: React.FC<ResourceCardProps> = ({
   const getIcon = () => {
     // For struggling questions (with help button), use a different icon
     if (showHelpButton) {
-      return <AlertCircle size={20} />;
+      return <AlertCircle size={20} className="text-orange-500" />;
     }
     
     // For regular resources, use the type-based icon
@@ -59,7 +59,7 @@ const ResourceCard: React.FC<ResourceCardProps> = ({
   return (
     <>
       <div 
-        className={`math-card ${!showHelpButton ? "card-hover cursor-pointer" : ""} relative`}
+        className={`math-card ${!showHelpButton ? "card-hover cursor-pointer" : "border-orange-200 bg-orange-50"} relative mb-3`}
         onClick={handleCardClick}
       >
         <div className="flex items-start gap-3">
@@ -69,7 +69,7 @@ const ResourceCard: React.FC<ResourceCardProps> = ({
           
           <div className="flex-1">
             <h3 className="font-medium mb-1">{title}</h3>
-            <p className="text-sm text-muted-foreground">{description}</p>
+            {description && <p className="text-sm text-muted-foreground">{description}</p>}
             
             {!showHelpButton && (
               <div className="flex mt-2">
@@ -85,7 +85,7 @@ const ResourceCard: React.FC<ResourceCardProps> = ({
               <Button
                 size="sm"
                 variant="outline"
-                className="h-8"
+                className="h-8 bg-white hover:bg-orange-100 border-orange-200 text-orange-700"
                 onClick={handleHelpClick}
               >
                 <HelpCircle className="mr-1 h-4 w-4" />
