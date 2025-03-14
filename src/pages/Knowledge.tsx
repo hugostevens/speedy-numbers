@@ -7,7 +7,7 @@ import AskQuestionDialog from '@/components/knowledge/AskQuestionDialog';
 import { KnowledgeItem } from '@/types';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
-import { MessageCircleQuestion, Video } from 'lucide-react';
+import { MessageCircleQuestion, Video, Headphones, Eye } from 'lucide-react';
 import { levels } from '@/data/mathLevels';
 import { useIsMobile } from '@/hooks/use-mobile';
 
@@ -73,13 +73,33 @@ const Knowledge: React.FC = () => {
             Learn different ways to add, subtract, multiply, and divide
           </p>
           
-          <div className="flex items-center mt-1 md:mt-0">
-            <div className="math-icon-container h-6 w-6 mr-1">
-              <Video size={16} />
+          <div className="flex items-center gap-2 mt-1 md:mt-0">
+            <div className="flex items-center">
+              <div className="math-icon-container h-6 w-6 mr-1">
+                <Video size={16} />
+              </div>
+              <span className="text-xs bg-muted px-2 py-1 rounded-full">
+                Video
+              </span>
             </div>
-            <span className="text-xs bg-muted px-2 py-1 rounded-full">
-              Video
-            </span>
+            
+            <div className="flex items-center">
+              <div className="math-icon-container h-6 w-6 mr-1">
+                <Headphones size={16} />
+              </div>
+              <span className="text-xs bg-muted px-2 py-1 rounded-full">
+                Audio
+              </span>
+            </div>
+            
+            <div className="flex items-center">
+              <div className="math-icon-container h-6 w-6 mr-1">
+                <Eye size={16} />
+              </div>
+              <span className="text-xs bg-muted px-2 py-1 rounded-full">
+                Visual
+              </span>
+            </div>
           </div>
         </div>
         
