@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { useParams } from 'react-router-dom';
 import PageHeader from '@/components/layout/PageHeader';
@@ -55,6 +54,7 @@ const PracticeSession: React.FC = () => {
       <PageHeader 
         title="Practice" 
         showBackButton
+        backPath="/practice"
       />
       
       {!sessionComplete ? (
