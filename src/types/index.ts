@@ -18,6 +18,14 @@ export type MathQuestion = {
   userAnswer?: number;
   isCorrect?: boolean;
   timeToAnswer?: number;
+  performance?: {
+    attempts: number;
+    correctAttempts: number;
+    fastCorrectAttempts: number;
+    consecutiveIncorrect: number;
+    isMastered: boolean;
+    isStruggling: boolean;
+  };
 };
 
 export type Badge = {
@@ -48,6 +56,7 @@ export type UserProfile = {
     date: string;
     action: string;
   }[];
+  session: any;
 };
 
 export type KnowledgeItem = {

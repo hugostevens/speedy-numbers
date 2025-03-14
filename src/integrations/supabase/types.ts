@@ -33,6 +33,51 @@ export type Database = {
         }
         Relationships: []
       }
+      user_question_performance: {
+        Row: {
+          answer: number
+          attempts: number
+          consecutive_incorrect: number
+          correct_attempts: number
+          created_at: string
+          fast_correct_attempts: number
+          id: string
+          last_attempted_at: string | null
+          num1: number
+          num2: number
+          operation: string
+          user_id: string
+        }
+        Insert: {
+          answer: number
+          attempts?: number
+          consecutive_incorrect?: number
+          correct_attempts?: number
+          created_at?: string
+          fast_correct_attempts?: number
+          id?: string
+          last_attempted_at?: string | null
+          num1: number
+          num2: number
+          operation: string
+          user_id: string
+        }
+        Update: {
+          answer?: number
+          attempts?: number
+          consecutive_incorrect?: number
+          correct_attempts?: number
+          created_at?: string
+          fast_correct_attempts?: number
+          id?: string
+          last_attempted_at?: string | null
+          num1?: number
+          num2?: number
+          operation?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never

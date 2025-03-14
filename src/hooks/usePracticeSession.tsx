@@ -5,10 +5,11 @@ import { toast } from 'sonner';
 import { MathQuestion, MathLevel } from '@/types';
 import { generateQuestionSet } from '@/lib/math';
 import { useUser } from '@/context/UserContext';
+import { supabase } from '@/integrations/supabase/client';
 
 export const usePracticeSession = (levelId: string | undefined, level: MathLevel | undefined) => {
   const navigate = useNavigate();
-  const { updateDailyGoal } = useUser();
+  const { user, updateDailyGoal } = useUser();
   
   const [questions, setQuestions] = useState<MathQuestion[]>([]);
   const [currentIndex, setCurrentIndex] = useState(0);
@@ -17,6 +18,10 @@ export const usePracticeSession = (levelId: string | undefined, level: MathLevel
   const [score, setScore] = useState(0);
   const [startTime, setStartTime] = useState<number>(0);
   const [answerTime, setAnswerTime] = useState<number>(0);
+  const [masteryInfo, setMasteryInfo] = useState<{
+    isMastered: boolean;
+    isStruggling: boolean;
+  }>({ isMastered: false, isStruggling: false });
 
   useEffect(() => {
     if (!levelId || !level) {
@@ -24,21 +29,166 @@ export const usePracticeSession = (levelId: string | undefined, level: MathLevel
       return;
     }
     
-    const questionSet = generateQuestionSet(
-      level.operation,
-      5,
-      level.range[0],
-      level.range[1]
-    );
+    const fetchQuestionsWithMasteryInfo = async () => {
+      // Generate base question set
+      const questionSet = generateQuestionSet(
+        level.operation,
+        5,
+        level.range[0],
+        level.range[1]
+      );
+      
+      if (!user || !user.session) {
+        // If not logged in, just use the generated questions
+        setQuestions(questionSet);
+        return;
+      }
+      
+      try {
+        // For logged in users, fetch performance data
+        const { data: performanceData, error } = await supabase
+          .from('user_question_performance')
+          .select('*')
+          .eq('user_id', user.id)
+          .eq('operation', level.operation)
+          .in('num1', questionSet.map(q => q.num1))
+          .in('num2', questionSet.map(q => q.num2));
+          
+        if (error) {
+          console.error('Error fetching performance data:', error);
+          setQuestions(questionSet);
+          return;
+        }
+        
+        // Merge performance data with questions
+        const enhancedQuestions = questionSet.map(question => {
+          const performance = performanceData?.find(p => 
+            p.operation === question.operation && 
+            p.num1 === question.num1 && 
+            p.num2 === question.num2
+          );
+          
+          return {
+            ...question,
+            performance: performance ? {
+              attempts: performance.attempts,
+              correctAttempts: performance.correct_attempts,
+              fastCorrectAttempts: performance.fast_correct_attempts,
+              consecutiveIncorrect: performance.consecutive_incorrect,
+              isMastered: performance.fast_correct_attempts >= 5,
+              isStruggling: performance.consecutive_incorrect >= 2
+            } : {
+              attempts: 0,
+              correctAttempts: 0,
+              fastCorrectAttempts: 0,
+              consecutiveIncorrect: 0,
+              isMastered: false,
+              isStruggling: false
+            }
+          };
+        });
+        
+        setQuestions(enhancedQuestions);
+        
+        // Set initial mastery info for first question
+        if (enhancedQuestions.length > 0 && enhancedQuestions[0].performance) {
+          setMasteryInfo({
+            isMastered: enhancedQuestions[0].performance.isMastered,
+            isStruggling: enhancedQuestions[0].performance.isStruggling
+          });
+        }
+      } catch (error) {
+        console.error('Error processing questions:', error);
+        setQuestions(questionSet);
+      }
+    };
     
-    setQuestions(questionSet);
-    setStartTime(Date.now());
-  }, [levelId, level, navigate]);
+    fetchQuestionsWithMasteryInfo();
+  }, [levelId, level, navigate, user]);
   
   // Reset the timer when moving to a new question
   useEffect(() => {
     setStartTime(Date.now());
-  }, [currentIndex]);
+    
+    // Update mastery info for the current question
+    if (questions.length > 0 && currentIndex < questions.length) {
+      const currentQuestion = questions[currentIndex];
+      if (currentQuestion.performance) {
+        setMasteryInfo({
+          isMastered: currentQuestion.performance.isMastered,
+          isStruggling: currentQuestion.performance.isStruggling
+        });
+      } else {
+        setMasteryInfo({ isMastered: false, isStruggling: false });
+      }
+    }
+  }, [currentIndex, questions]);
+  
+  const updateQuestionPerformance = async (
+    question: MathQuestion, 
+    isCorrect: boolean, 
+    answerTime: number
+  ) => {
+    if (!user || !user.session) return;
+    
+    try {
+      const isFastAnswer = answerTime < 1.5;
+      
+      // Check if we already have a record for this question
+      const { data: existingData, error: fetchError } = await supabase
+        .from('user_question_performance')
+        .select('*')
+        .eq('user_id', user.id)
+        .eq('operation', question.operation)
+        .eq('num1', question.num1)
+        .eq('num2', question.num2)
+        .maybeSingle();
+        
+      if (fetchError && fetchError.code !== 'PGRST116') { // PGRST116 is the code for "no rows returned"
+        console.error('Error fetching existing performance:', fetchError);
+        return;
+      }
+      
+      if (existingData) {
+        // Update existing record
+        const { error: updateError } = await supabase
+          .from('user_question_performance')
+          .update({
+            attempts: existingData.attempts + 1,
+            correct_attempts: isCorrect ? existingData.correct_attempts + 1 : existingData.correct_attempts,
+            fast_correct_attempts: (isCorrect && isFastAnswer) ? existingData.fast_correct_attempts + 1 : existingData.fast_correct_attempts,
+            consecutive_incorrect: isCorrect ? 0 : existingData.consecutive_incorrect + 1,
+            last_attempted_at: new Date().toISOString()
+          })
+          .eq('id', existingData.id);
+          
+        if (updateError) {
+          console.error('Error updating performance:', updateError);
+        }
+      } else {
+        // Insert new record
+        const { error: insertError } = await supabase
+          .from('user_question_performance')
+          .insert({
+            user_id: user.id,
+            operation: question.operation,
+            num1: question.num1,
+            num2: question.num2,
+            answer: question.answer,
+            attempts: 1,
+            correct_attempts: isCorrect ? 1 : 0,
+            fast_correct_attempts: (isCorrect && isFastAnswer) ? 1 : 0,
+            consecutive_incorrect: isCorrect ? 0 : 1
+          });
+          
+        if (insertError) {
+          console.error('Error inserting performance:', insertError);
+        }
+      }
+    } catch (error) {
+      console.error('Error updating question performance:', error);
+    }
+  };
   
   const handleNumberClick = (num: number) => {
     if (showFeedback) return;
@@ -66,6 +216,7 @@ export const usePracticeSession = (levelId: string | undefined, level: MathLevel
     const currentQuestion = questions[currentIndex];
     const isCorrect = userAnswer === currentQuestion.answer;
     
+    // Update the questions array with user's answer
     const updatedQuestions = [...questions];
     updatedQuestions[currentIndex] = {
       ...currentQuestion,
@@ -80,6 +231,9 @@ export const usePracticeSession = (levelId: string | undefined, level: MathLevel
     if (isCorrect) {
       setScore(prev => prev + 1);
     }
+    
+    // Update performance in database
+    updateQuestionPerformance(currentQuestion, isCorrect, timeTaken);
     
     setTimeout(() => {
       if (currentIndex < questions.length - 1) {
@@ -106,6 +260,7 @@ export const usePracticeSession = (levelId: string | undefined, level: MathLevel
     userInput,
     showFeedback,
     answerTime,
+    masteryInfo,
     handleNumberClick,
     handleResetInput,
     handleCheckAnswer

@@ -19,7 +19,18 @@ const MathProblem: React.FC<MathProblemProps> = ({
   const { operation, num1, num2, answer } = question;
   const operationSymbol = getOperationSymbol(operation);
   const isCorrect = parseInt(userInput) === answer;
-  const isFast = isCorrect && answerTime < 3;
+  const isFast = isCorrect && answerTime < 1.5;
+  
+  // Display a special message if the answer was fast (potential for mastery)
+  const getFeedbackMessage = () => {
+    if (isFast) {
+      return '⚡ That was fast! ⚡';
+    } else if (isCorrect) {
+      return '🎉 Correct! 🎉';
+    } else {
+      return `❌ Incorrect. The answer is ${answer}.`;
+    }
+  };
   
   return (
     <div className="text-center py-8">
@@ -48,9 +59,7 @@ const MathProblem: React.FC<MathProblemProps> = ({
               isCorrect ? 'text-green-500' : 'text-red-500'
             }`}
           >
-            {isCorrect 
-              ? (isFast ? '⚡ That was fast! ⚡' : '🎉 Correct! 🎉')
-              : `❌ Incorrect. The answer is ${answer}.`}
+            {getFeedbackMessage()}
           </div>
         )}
       </div>
