@@ -16,12 +16,31 @@ const Auth: React.FC = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const navigate = useNavigate();
-  const { user } = useUser();
+  const { user, session } = useUser();
   
   // If user is already logged in, redirect to home
   useEffect(() => {
+    const checkSession = async () => {
+      try {
+        const { data, error } = await supabase.auth.getSession();
+        if (error) {
+          console.error("Session check error:", error);
+          return;
+        }
+        
+        if (data.session) {
+          console.log("User already has a valid session, redirecting to home");
+          navigate('/');
+        }
+      } catch (err) {
+        console.error("Error checking session:", err);
+      }
+    };
+    
     if (user) {
       navigate('/');
+    } else {
+      checkSession();
     }
   }, [user, navigate]);
 
