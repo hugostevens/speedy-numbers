@@ -1,3 +1,4 @@
+
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { UserProfile, Badge } from '@/types';
 import { toast } from 'sonner';
@@ -97,22 +98,47 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [session, setSession] = useState<Session | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
+  // Function to fetch user profile data from Supabase
+  const fetchUserProfile = async (userId: string) => {
+    try {
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('*')
+        .eq('id', userId)
+        .single();
+      
+      if (error) {
+        console.error('Error fetching user profile:', error);
+        return null;
+      }
+      
+      return data;
+    } catch (error) {
+      console.error('Error in fetchUserProfile:', error);
+      return null;
+    }
+  };
+
   useEffect(() => {
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      (_event, session) => {
+      async (_event, session) => {
         setSession(session);
-        setIsLoading(false);
+        setIsLoading(true);
         
         if (session?.user) {
+          const profile = await fetchUserProfile(session.user.id);
+          
           setUser({
             ...initialUser,
             id: session.user.id,
-            name: session.user.email?.split('@')[0] || 'User',
-            avatar: session.user.email?.substring(0, 2).toUpperCase() || 'U',
+            name: profile?.name || session.user.email?.split('@')[0] || 'User',
+            avatar: (profile?.name || session.user.email?.substring(0, 2) || 'U').substring(0, 2).toUpperCase(),
           });
         } else {
           setUser(null);
         }
+        
+        setIsLoading(false);
       }
     );
 
@@ -121,11 +147,13 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
       setSession(session);
       
       if (session?.user) {
+        const profile = await fetchUserProfile(session.user.id);
+        
         setUser({
           ...initialUser,
           id: session.user.id,
-          name: session.user.email?.split('@')[0] || 'User',
-          avatar: session.user.email?.substring(0, 2).toUpperCase() || 'U',
+          name: profile?.name || session.user.email?.split('@')[0] || 'User',
+          avatar: (profile?.name || session.user.email?.substring(0, 2) || 'U').substring(0, 2).toUpperCase(),
         });
       }
       
