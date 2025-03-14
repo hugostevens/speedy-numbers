@@ -40,11 +40,14 @@ export const usePracticeSession = (levelId: string | undefined, level: MathLevel
       
       if (!user || !user.session) {
         // If not logged in, just use the generated questions
+        console.log('User not logged in. Performance tracking disabled.');
+        toast.warning('Log in to track your progress and mastery');
         setQuestions(questionSet);
         return;
       }
       
       try {
+        console.log('Fetching performance data for user:', user.id);
         // For logged in users, fetch performance data
         const { data: performanceData, error } = await supabase
           .from('user_question_performance')
@@ -59,6 +62,8 @@ export const usePracticeSession = (levelId: string | undefined, level: MathLevel
           setQuestions(questionSet);
           return;
         }
+        
+        console.log('Performance data retrieved:', performanceData);
         
         // Merge performance data with questions
         const enhancedQuestions = questionSet.map(question => {
@@ -129,10 +134,18 @@ export const usePracticeSession = (levelId: string | undefined, level: MathLevel
     isCorrect: boolean, 
     answerTime: number
   ) => {
-    if (!user || !user.session) return;
+    if (!user || !user.session) {
+      console.log('User not logged in. Cannot update performance data.');
+      return;
+    }
     
     try {
       const isFastAnswer = answerTime < 1.5;
+      console.log(`Updating performance for ${question.num1} ${question.operation} ${question.num2}:`, {
+        isCorrect,
+        answerTime,
+        isFastAnswer
+      });
       
       // Check if we already have a record for this question
       const { data: existingData, error: fetchError } = await supabase
@@ -151,6 +164,7 @@ export const usePracticeSession = (levelId: string | undefined, level: MathLevel
       
       if (existingData) {
         // Update existing record
+        console.log('Updating existing record:', existingData.id);
         const { error: updateError } = await supabase
           .from('user_question_performance')
           .update({
@@ -164,10 +178,14 @@ export const usePracticeSession = (levelId: string | undefined, level: MathLevel
           
         if (updateError) {
           console.error('Error updating performance:', updateError);
+          toast.error('Failed to save your progress');
+        } else {
+          console.log('Performance updated successfully');
         }
       } else {
         // Insert new record
-        const { error: insertError } = await supabase
+        console.log('Creating new performance record');
+        const { data: newRecord, error: insertError } = await supabase
           .from('user_question_performance')
           .insert({
             user_id: user.id,
@@ -179,14 +197,19 @@ export const usePracticeSession = (levelId: string | undefined, level: MathLevel
             correct_attempts: isCorrect ? 1 : 0,
             fast_correct_attempts: (isCorrect && isFastAnswer) ? 1 : 0,
             consecutive_incorrect: isCorrect ? 0 : 1
-          });
+          })
+          .select();
           
         if (insertError) {
           console.error('Error inserting performance:', insertError);
+          toast.error('Failed to save your progress');
+        } else {
+          console.log('New performance record created:', newRecord);
         }
       }
     } catch (error) {
       console.error('Error updating question performance:', error);
+      toast.error('Something went wrong while tracking your progress');
     }
   };
   
