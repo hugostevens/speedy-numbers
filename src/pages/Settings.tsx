@@ -4,7 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import PageHeader from '@/components/layout/PageHeader';
 import SettingsGroup from '@/components/settings/SettingsGroup';
 import SettingsItem from '@/components/settings/SettingsItem';
-import { useUser } from '@/context/UserContext';
+import { useUser } from '@/context/user';
 import { 
   Palette, 
   Target, 

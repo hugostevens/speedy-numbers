@@ -2,7 +2,7 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Settings, Flame } from 'lucide-react';
-import { useUser } from '@/context/UserContext';
+import { useUser } from '@/context/user';
 import { Avatar } from '@/components/ui/avatar';
 
 const UserHeader: React.FC = () => {

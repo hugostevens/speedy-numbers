@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { Flame, Trophy } from 'lucide-react';
-import { useUser } from '@/context/UserContext';
+import { useUser } from '@/context/user';
 import { Progress } from '@/components/ui/progress';
 
 const StreakCard: React.FC = () => {

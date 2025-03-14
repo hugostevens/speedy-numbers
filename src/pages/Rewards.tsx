@@ -1,10 +1,11 @@
+
 import React from 'react';
 import PageHeader from '@/components/layout/PageHeader';
 import RewardsTabs from '@/components/rewards/RewardsTabs';
 import BadgeCard from '@/components/rewards/BadgeCard';
 import SocialContent from '@/components/rewards/SocialContent';
 import ProgressContent from '@/components/rewards/ProgressContent';
-import { useUser } from '@/context/UserContext';
+import { useUser } from '@/context/user';
 import { TabsContent } from '@/components/ui/tabs';
 import { Progress } from '@/components/ui/progress';
 import { Flame } from 'lucide-react';

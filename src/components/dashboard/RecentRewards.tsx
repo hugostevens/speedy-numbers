@@ -2,7 +2,7 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ChevronRight, Award, Star, Trophy } from 'lucide-react';
-import { useUser } from '@/context/UserContext';
+import { useUser } from '@/context/user';
 
 const BadgeIcon: React.FC<{ id: string }> = ({ id }) => {
   switch (id) {
