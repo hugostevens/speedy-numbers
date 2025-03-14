@@ -4,7 +4,7 @@ import PageHeader from '@/components/layout/PageHeader';
 import ResourceCard from '@/components/knowledge/ResourceCard';
 import TopicCard from '@/components/knowledge/TopicCard';
 import AskQuestionDialog from '@/components/knowledge/AskQuestionDialog';
-import { KnowledgeItem, MathQuestion } from '@/types';
+import { KnowledgeItem, MathOperation, MathQuestion } from '@/types';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { MessageCircleQuestion, Video, Headphones, Eye } from 'lucide-react';
@@ -16,7 +16,7 @@ import { getOperationSymbol } from '@/lib/math';
 
 interface StruggleQuestion {
   id: string;
-  operation: string;
+  operation: MathOperation;
   num1: number;
   num2: number;
   answer: number;
@@ -56,7 +56,14 @@ const Knowledge: React.FC = () => {
         }
         
         console.log('Found struggling questions:', data);
-        setStrugglingQuestions(data as StruggleQuestion[]);
+        
+        // Cast the operation to MathOperation type
+        const typedData = data?.map(item => ({
+          ...item,
+          operation: item.operation as MathOperation
+        })) as StruggleQuestion[];
+        
+        setStrugglingQuestions(typedData || []);
         setIsLoading(false);
       } catch (error) {
         console.error('Error processing struggling questions:', error);
