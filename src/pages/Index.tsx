@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useUser } from '@/context/UserContext';
 import UserHeader from '@/components/dashboard/UserHeader';
@@ -8,10 +8,21 @@ import RecentRewards from '@/components/dashboard/RecentRewards';
 import LearningSection from '@/components/dashboard/LearningSection';
 import { Button } from '@/components/ui/button';
 import { LogIn } from 'lucide-react';
+import { supabase } from '@/integrations/supabase/client';
 
 const Index: React.FC = () => {
   const navigate = useNavigate();
   const { user, isLoading } = useUser();
+
+  // Verify Supabase session on page load
+  useEffect(() => {
+    const checkSession = async () => {
+      const { data } = await supabase.auth.getSession();
+      console.log("Current Supabase session on Index page:", data.session);
+    };
+    
+    checkSession();
+  }, []);
 
   if (isLoading) {
     return <div className="page-container">Loading...</div>;

@@ -1,3 +1,4 @@
+
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { UserProfile, Badge } from '@/types';
 import { toast } from 'sonner';
@@ -61,26 +62,6 @@ const initialBadges: Badge[] = [
   }
 ];
 
-const initialUser: UserProfile = {
-  id: '1',
-  name: 'Jamie',
-  avatar: 'JD',
-  level: 3,
-  streak: 5,
-  dailyGoal: {
-    target: 10,
-    current: 6,
-  },
-  theme: 'space',
-  badges: initialBadges,
-  recentActivity: [
-    {
-      date: new Date().toISOString(),
-      action: 'Completed practice session',
-    }
-  ]
-};
-
 const UserContext = createContext<UserContextType>({
   user: null,
   session: null,
@@ -99,34 +80,71 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   useEffect(() => {
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      (_event, session) => {
-        setSession(session);
+      (event, currentSession) => {
+        console.log('Auth state changed:', event, currentSession?.user?.id);
+        setSession(currentSession);
         setIsLoading(false);
         
-        if (session?.user) {
-          setUser({
-            ...initialUser,
-            id: session.user.id,
-            name: session.user.email?.split('@')[0] || 'User',
-            avatar: session.user.email?.substring(0, 2).toUpperCase() || 'U',
-          });
+        if (currentSession?.user) {
+          const userData = {
+            id: currentSession.user.id,
+            name: currentSession.user.email?.split('@')[0] || 'User',
+            avatar: currentSession.user.email?.substring(0, 2).toUpperCase() || 'U',
+            level: 3,
+            streak: 5,
+            dailyGoal: {
+              target: 10,
+              current: 6,
+            },
+            theme: 'space',
+            badges: initialBadges,
+            recentActivity: [
+              {
+                date: new Date().toISOString(),
+                action: 'Completed practice session',
+              }
+            ],
+            session: currentSession
+          };
+          
+          console.log('Setting user data:', userData);
+          setUser(userData);
         } else {
+          console.log('No session found, setting user to null');
           setUser(null);
         }
       }
     );
 
     const checkSession = async () => {
-      const { data: { session } } = await supabase.auth.getSession();
-      setSession(session);
+      const { data: { session: currentSession } } = await supabase.auth.getSession();
+      console.log('Initial session check:', currentSession?.user?.id);
+      setSession(currentSession);
       
-      if (session?.user) {
-        setUser({
-          ...initialUser,
-          id: session.user.id,
-          name: session.user.email?.split('@')[0] || 'User',
-          avatar: session.user.email?.substring(0, 2).toUpperCase() || 'U',
-        });
+      if (currentSession?.user) {
+        const userData = {
+          id: currentSession.user.id,
+          name: currentSession.user.email?.split('@')[0] || 'User',
+          avatar: currentSession.user.email?.substring(0, 2).toUpperCase() || 'U',
+          level: 3,
+          streak: 5,
+          dailyGoal: {
+            target: 10,
+            current: 6,
+          },
+          theme: 'space',
+          badges: initialBadges,
+          recentActivity: [
+            {
+              date: new Date().toISOString(),
+              action: 'Completed practice session',
+            }
+          ],
+          session: currentSession
+        };
+        
+        console.log('Setting initial user data:', userData);
+        setUser(userData);
       }
       
       setIsLoading(false);

@@ -38,10 +38,26 @@ export const usePracticeSession = (levelId: string | undefined, level: MathLevel
         level.range[1]
       );
       
-      if (!user || !user.session) {
+      // Debug authentication state
+      console.log('Current user state:', user);
+      
+      if (!user) {
         // If not logged in, just use the generated questions
-        console.log('User not logged in. Performance tracking disabled.');
+        console.log('User object is completely missing. Performance tracking disabled.');
         toast.warning('Log in to track your progress and mastery');
+        setQuestions(questionSet);
+        return;
+      }
+      
+      console.log('User ID:', user.id);
+      
+      // Check if user is authenticated with Supabase
+      const { data: { session } } = await supabase.auth.getSession();
+      console.log('Current Supabase session:', session);
+      
+      if (!session) {
+        console.log('No active Supabase session. Performance tracking disabled.');
+        toast.warning('Your session has expired. Please log in again to track progress.');
         setQuestions(questionSet);
         return;
       }
@@ -59,6 +75,7 @@ export const usePracticeSession = (levelId: string | undefined, level: MathLevel
           
         if (error) {
           console.error('Error fetching performance data:', error);
+          toast.error('Could not retrieve your past performance data');
           setQuestions(questionSet);
           return;
         }
@@ -134,8 +151,12 @@ export const usePracticeSession = (levelId: string | undefined, level: MathLevel
     isCorrect: boolean, 
     answerTime: number
   ) => {
-    if (!user || !user.session) {
-      console.log('User not logged in. Cannot update performance data.');
+    // Double-check authentication before updating database
+    const { data: { session } } = await supabase.auth.getSession();
+    
+    if (!user || !session) {
+      console.log('User not logged in or session expired. Cannot update performance data.');
+      toast.warning('Please log in to save your progress');
       return;
     }
     
@@ -181,6 +202,7 @@ export const usePracticeSession = (levelId: string | undefined, level: MathLevel
           toast.error('Failed to save your progress');
         } else {
           console.log('Performance updated successfully');
+          toast.success('Progress saved');
         }
       } else {
         // Insert new record
@@ -205,6 +227,7 @@ export const usePracticeSession = (levelId: string | undefined, level: MathLevel
           toast.error('Failed to save your progress');
         } else {
           console.log('New performance record created:', newRecord);
+          toast.success('Progress saved');
         }
       }
     } catch (error) {
