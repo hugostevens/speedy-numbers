@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import PageHeader from '@/components/layout/PageHeader';
 import ResourceCard from '@/components/knowledge/ResourceCard';
@@ -116,7 +117,7 @@ const Knowledge: React.FC = () => {
   
   return (
     <div className="page-container">
-      <PageHeader title="Knowledge" showBackButton />
+      <PageHeader title="Tips & Tricks" showBackButton />
       
       <div className="mb-6">
         {isLoading ? (
