@@ -46,6 +46,7 @@ export type UserProfile = {
   avatar: string;
   level: number;
   streak: number;
+  longestStreak: number;
   dailyGoal: {
     target: number;
     current: number;

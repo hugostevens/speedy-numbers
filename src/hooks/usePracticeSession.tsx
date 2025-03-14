@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
@@ -9,7 +8,7 @@ import { supabase } from '@/integrations/supabase/client';
 
 export const usePracticeSession = (levelId: string | undefined, level: MathLevel | undefined) => {
   const navigate = useNavigate();
-  const { user, updateDailyGoal } = useUser();
+  const { user, updateDailyGoal, checkAndUpdateStreak } = useUser();
   
   const [questions, setQuestions] = useState<MathQuestion[]>([]);
   const [currentIndex, setCurrentIndex] = useState(0);
@@ -30,7 +29,6 @@ export const usePracticeSession = (levelId: string | undefined, level: MathLevel
     }
     
     const fetchQuestionsWithMasteryInfo = async () => {
-      // Generate base question set
       const questionSet = generateQuestionSet(
         level.operation,
         5,
@@ -38,11 +36,9 @@ export const usePracticeSession = (levelId: string | undefined, level: MathLevel
         level.range[1]
       );
       
-      // Debug authentication state
       console.log('Current user state:', user);
       
       if (!user) {
-        // If not logged in, just use the generated questions
         console.log('User object is completely missing. Performance tracking disabled.');
         toast.warning('Log in to track your progress and mastery');
         setQuestions(questionSet);
@@ -51,7 +47,6 @@ export const usePracticeSession = (levelId: string | undefined, level: MathLevel
       
       console.log('User ID:', user.id);
       
-      // Check if user is authenticated with Supabase
       const { data: { session } } = await supabase.auth.getSession();
       console.log('Current Supabase session:', session);
       
@@ -64,7 +59,6 @@ export const usePracticeSession = (levelId: string | undefined, level: MathLevel
       
       try {
         console.log('Fetching performance data for user:', user.id);
-        // For logged in users, fetch performance data
         const { data: performanceData, error } = await supabase
           .from('user_question_performance')
           .select('*')
@@ -82,7 +76,6 @@ export const usePracticeSession = (levelId: string | undefined, level: MathLevel
         
         console.log('Performance data retrieved:', performanceData);
         
-        // Merge performance data with questions
         const enhancedQuestions = questionSet.map(question => {
           const performance = performanceData?.find(p => 
             p.operation === question.operation && 
@@ -112,7 +105,6 @@ export const usePracticeSession = (levelId: string | undefined, level: MathLevel
         
         setQuestions(enhancedQuestions);
         
-        // Set initial mastery info for first question
         if (enhancedQuestions.length > 0 && enhancedQuestions[0].performance) {
           setMasteryInfo({
             isMastered: enhancedQuestions[0].performance.isMastered,
@@ -128,11 +120,9 @@ export const usePracticeSession = (levelId: string | undefined, level: MathLevel
     fetchQuestionsWithMasteryInfo();
   }, [levelId, level, navigate, user]);
   
-  // Reset the timer when moving to a new question
   useEffect(() => {
     setStartTime(Date.now());
     
-    // Update mastery info for the current question
     if (questions.length > 0 && currentIndex < questions.length) {
       const currentQuestion = questions[currentIndex];
       if (currentQuestion.performance) {
@@ -151,7 +141,6 @@ export const usePracticeSession = (levelId: string | undefined, level: MathLevel
     isCorrect: boolean, 
     answerTime: number
   ) => {
-    // Double-check authentication before updating database
     const { data: { session } } = await supabase.auth.getSession();
     
     if (!user || !session) {
@@ -168,7 +157,6 @@ export const usePracticeSession = (levelId: string | undefined, level: MathLevel
         isFastAnswer
       });
       
-      // Check if we already have a record for this question
       const { data: existingData, error: fetchError } = await supabase
         .from('user_question_performance')
         .select('*')
@@ -178,14 +166,12 @@ export const usePracticeSession = (levelId: string | undefined, level: MathLevel
         .eq('num2', question.num2)
         .maybeSingle();
         
-      if (fetchError && fetchError.code !== 'PGRST116') { // PGRST116 is the code for "no rows returned"
+      if (fetchError && fetchError.code !== 'PGRST116') {
         console.error('Error fetching existing performance:', fetchError);
         return;
       }
       
       if (existingData) {
-        // Update existing record
-        console.log('Updating existing record:', existingData.id);
         const { error: updateError } = await supabase
           .from('user_question_performance')
           .update({
@@ -205,8 +191,6 @@ export const usePracticeSession = (levelId: string | undefined, level: MathLevel
           toast.success('Progress saved');
         }
       } else {
-        // Insert new record
-        console.log('Creating new performance record');
         const { data: newRecord, error: insertError } = await supabase
           .from('user_question_performance')
           .insert({
@@ -253,16 +237,14 @@ export const usePracticeSession = (levelId: string | undefined, level: MathLevel
   const handleCheckAnswer = () => {
     if (!userInput || showFeedback) return;
     
-    // Calculate time taken to answer
     const endTime = Date.now();
-    const timeTaken = (endTime - startTime) / 1000; // Convert to seconds
+    const timeTaken = (endTime - startTime) / 1000;
     setAnswerTime(timeTaken);
     
     const userAnswer = parseInt(userInput);
     const currentQuestion = questions[currentIndex];
     const isCorrect = userAnswer === currentQuestion.answer;
     
-    // Update the questions array with user's answer
     const updatedQuestions = [...questions];
     updatedQuestions[currentIndex] = {
       ...currentQuestion,
@@ -278,7 +260,6 @@ export const usePracticeSession = (levelId: string | undefined, level: MathLevel
       setScore(prev => prev + 1);
     }
     
-    // Update performance in database
     updateQuestionPerformance(currentQuestion, isCorrect, timeTaken);
     
     setTimeout(() => {
@@ -290,6 +271,8 @@ export const usePracticeSession = (levelId: string | undefined, level: MathLevel
         const percentCorrect = (score + (isCorrect ? 1 : 0)) / questions.length * 100;
         
         updateDailyGoal(1);
+        
+        checkAndUpdateStreak();
         
         toast.success(`Practice completed! Score: ${score + (isCorrect ? 1 : 0)}/${questions.length}`);
         
