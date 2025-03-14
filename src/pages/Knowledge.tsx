@@ -5,6 +5,9 @@ import ResourceCard from '@/components/knowledge/ResourceCard';
 import TopicCard from '@/components/knowledge/TopicCard';
 import { KnowledgeItem } from '@/types';
 import { useNavigate } from 'react-router-dom';
+import { Button } from '@/components/ui/button';
+import { MessageCircleQuestion } from 'lucide-react';
+import { toast } from 'sonner';
 
 const recommendedResources: KnowledgeItem[] = [
   {
@@ -41,10 +44,30 @@ const Knowledge: React.FC = () => {
     // In a real app, this would navigate to a resource page
     navigate(`/knowledge/resource/${resource.id}`);
   };
+
+  const handleAskQuestion = () => {
+    // In a real app, this would open a question form or chat interface
+    toast.success("Question feature coming soon!");
+  };
   
   return (
     <div className="page-container">
       <PageHeader title="Knowledge" showBackButton />
+      
+      <div className="math-card mb-6 bg-soft-blue">
+        <h2 className="text-lg font-semibold mb-2">Need help?</h2>
+        <p className="text-sm text-muted-foreground mb-4">
+          Have a question about a math problem or concept? Ask for help!
+        </p>
+        <Button 
+          onClick={handleAskQuestion}
+          className="w-full"
+          variant="default"
+        >
+          <MessageCircleQuestion className="mr-2" />
+          Ask a Question
+        </Button>
+      </div>
       
       <div className="mb-6">
         <h2 className="text-lg font-semibold mb-4">Recommended for you</h2>
