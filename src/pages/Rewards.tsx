@@ -3,6 +3,7 @@ import React from 'react';
 import PageHeader from '@/components/layout/PageHeader';
 import RewardsTabs from '@/components/rewards/RewardsTabs';
 import BadgeCard from '@/components/rewards/BadgeCard';
+import SocialContent from '@/components/rewards/SocialContent';
 import { useUser } from '@/context/UserContext';
 import { TabsContent } from '@/components/ui/tabs';
 import { Progress } from '@/components/ui/progress';
@@ -72,9 +73,7 @@ const Rewards: React.FC = () => {
         </TabsContent>
         
         <TabsContent value="social">
-          <div className="text-center py-10">
-            <p className="text-muted-foreground">Social features coming soon!</p>
-          </div>
+          <SocialContent />
         </TabsContent>
         
         <TabsContent value="progress">
