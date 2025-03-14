@@ -18,13 +18,15 @@ interface StrugglingQuestionsProps {
   user: any;
   strugglingQuestions: StruggleQuestion[];
   onSelectQuestion: (resource: KnowledgeItem) => void;
+  debugInfo?: string; // Add this for debugging
 }
 
 const StrugglingQuestions: React.FC<StrugglingQuestionsProps> = ({
   isLoading,
   user,
   strugglingQuestions,
-  onSelectQuestion
+  onSelectQuestion,
+  debugInfo
 }) => {
   const createResourceFromQuestion = (question: StruggleQuestion): KnowledgeItem => {
     const operationSymbol = getOperationSymbol(question.operation);
@@ -32,7 +34,7 @@ const StrugglingQuestions: React.FC<StrugglingQuestionsProps> = ({
     return {
       id: question.id,
       title: `${question.num1} ${operationSymbol} ${question.num2} = ${question.answer}`,
-      description: '',
+      description: `This question has been answered incorrectly ${question.consecutive_incorrect} time(s) in a row.`,
       type: 'interactive',
       tags: [question.operation]
     };
@@ -80,6 +82,11 @@ const StrugglingQuestions: React.FC<StrugglingQuestionsProps> = ({
       <p className="text-sm text-muted-foreground mb-4">
         As you practice more, we'll recommend resources for questions you find challenging.
       </p>
+      {debugInfo && (
+        <div className="text-xs text-muted-foreground bg-muted p-2 rounded">
+          <p>Debug info: {debugInfo}</p>
+        </div>
+      )}
     </>
   );
 };

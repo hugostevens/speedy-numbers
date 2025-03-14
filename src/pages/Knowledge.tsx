@@ -1,18 +1,17 @@
 
 import React, { useState, useEffect } from 'react';
 import PageHeader from '@/components/layout/PageHeader';
-import ResourceCard from '@/components/knowledge/ResourceCard';
-import AskQuestionDialog from '@/components/knowledge/AskQuestionDialog';
 import { KnowledgeItem, MathOperation } from '@/types';
 import { useNavigate } from 'react-router-dom';
 import { useUser } from '@/context/UserContext';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 
-// Import our new components
+// Import our components
 import StrugglingQuestions from '@/components/knowledge/StrugglingQuestions';
 import AskQuestionSection from '@/components/knowledge/AskQuestionSection';
 import TopicsSection from '@/components/knowledge/TopicsSection';
+import AskQuestionDialog from '@/components/knowledge/AskQuestionDialog';
 
 interface StruggleQuestion {
   id: string;
@@ -30,6 +29,7 @@ const Knowledge: React.FC = () => {
   const [questionDialogOpen, setQuestionDialogOpen] = useState(false);
   const [strugglingQuestions, setStrugglingQuestions] = useState<StruggleQuestion[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [debugInfo, setDebugInfo] = useState<string>("");
   
   useEffect(() => {
     const fetchStrugglingQuestions = async () => {
@@ -42,12 +42,27 @@ const Knowledge: React.FC = () => {
       try {
         console.log('Fetching struggling questions for user:', user.id);
         
-        // Modified query to use >= 1 instead of > 0 for consecutive_incorrect
+        // Get ALL user questions first to debug what's in the database
+        const { data: allData, error: allError } = await supabase
+          .from('user_question_performance')
+          .select('*')
+          .eq('user_id', user.id);
+          
+        if (allError) {
+          console.error('Error fetching all questions:', allError);
+          setDebugInfo(`Error fetching all questions: ${allError.message}`);
+        } else {
+          console.log('All user questions:', allData);
+          const strugglingCount = allData?.filter(q => q.consecutive_incorrect >= 1).length || 0;
+          setDebugInfo(`Found ${allData?.length || 0} total questions, ${strugglingCount} with consecutive_incorrect >= 1`);
+        }
+        
+        // Now get only the struggling questions
         const { data, error } = await supabase
           .from('user_question_performance')
           .select('*')
           .eq('user_id', user.id)
-          .gte('consecutive_incorrect', 1) // Changed from gt(0) to gte(1)
+          .gte('consecutive_incorrect', 1) // Using gte(1) as discussed
           .order('consecutive_incorrect', { ascending: false })
           .limit(3);
           
@@ -113,6 +128,7 @@ const Knowledge: React.FC = () => {
           user={user}
           strugglingQuestions={strugglingQuestions}
           onSelectQuestion={handleStruggleQuestionSelect}
+          debugInfo={debugInfo}
         />
       </div>
       
