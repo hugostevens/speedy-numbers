@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import PageHeader from '@/components/layout/PageHeader';
 import ResourceCard from '@/components/knowledge/ResourceCard';
@@ -12,6 +13,7 @@ import { useIsMobile } from '@/hooks/use-mobile';
 import { useUser } from '@/context/UserContext';
 import { supabase } from '@/integrations/supabase/client';
 import { getOperationSymbol } from '@/lib/math';
+import { useToast } from '@/hooks/use-toast';
 
 interface StruggleQuestion {
   id: string;
@@ -26,6 +28,7 @@ const Knowledge: React.FC = () => {
   const navigate = useNavigate();
   const isMobile = useIsMobile();
   const { user } = useUser();
+  const { toast } = useToast();
   const [questionDialogOpen, setQuestionDialogOpen] = useState(false);
   const [strugglingQuestions, setStrugglingQuestions] = useState<StruggleQuestion[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -33,6 +36,7 @@ const Knowledge: React.FC = () => {
   useEffect(() => {
     const fetchStrugglingQuestions = async () => {
       if (!user?.id) {
+        console.log('No user ID found, skipping fetch of struggling questions');
         setIsLoading(false);
         return;
       }
@@ -50,27 +54,42 @@ const Knowledge: React.FC = () => {
           
         if (error) {
           console.error('Error fetching struggling questions:', error);
+          toast({
+            title: 'Error',
+            description: 'Could not load your struggling questions',
+            variant: 'destructive'
+          });
           setIsLoading(false);
           return;
         }
         
         console.log('Found struggling questions:', data);
         
-        const typedData = data?.map(item => ({
-          ...item,
-          operation: item.operation as MathOperation
-        })) as StruggleQuestion[];
+        if (data && data.length > 0) {
+          const typedData = data.map(item => ({
+            ...item,
+            operation: item.operation as MathOperation
+          })) as StruggleQuestion[];
+          
+          setStrugglingQuestions(typedData);
+        } else {
+          setStrugglingQuestions([]);
+        }
         
-        setStrugglingQuestions(typedData || []);
         setIsLoading(false);
       } catch (error) {
         console.error('Error processing struggling questions:', error);
+        toast({
+          title: 'Error',
+          description: 'Could not process your struggling questions',
+          variant: 'destructive'
+        });
         setIsLoading(false);
       }
     };
     
     fetchStrugglingQuestions();
-  }, [user]);
+  }, [user, toast]);
   
   const handleResourceSelect = (resource: KnowledgeItem) => {
     navigate(`/knowledge/resource/${resource.id}`);
@@ -103,6 +122,13 @@ const Knowledge: React.FC = () => {
       <div className="mb-6">
         {isLoading ? (
           <p className="text-center py-4">Loading personalized recommendations...</p>
+        ) : !user ? (
+          <div className="bg-muted p-4 rounded-lg mb-4">
+            <h2 className="text-lg font-semibold mb-2">Sign in to see personalized recommendations</h2>
+            <p className="text-sm text-muted-foreground">
+              We'll show you questions you're struggling with and recommend resources to help.
+            </p>
+          </div>
         ) : strugglingQuestions.length > 0 ? (
           <>
             <h2 className="text-lg font-semibold mb-4">Would you like some help with the following questions?</h2>
