@@ -8,6 +8,7 @@ import { KnowledgeItem } from '@/types';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { MessageCircleQuestion } from 'lucide-react';
+import { levels } from '@/data/mathLevels';
 
 const recommendedResources: KnowledgeItem[] = [
   {
@@ -16,24 +17,6 @@ const recommendedResources: KnowledgeItem[] = [
     description: 'Learn different ways to add numbers',
     type: 'video',
     tags: ['addition']
-  }
-];
-
-const topics = [
-  {
-    id: 'addition-0-10',
-    title: 'Addition (0-10)',
-    description: 'Basic addition facts',
-  },
-  {
-    id: 'subtraction-0-10',
-    title: 'Subtraction (0-10)',
-    description: 'Basic subtraction facts',
-  },
-  {
-    id: 'number-bonds',
-    title: 'Number Bonds',
-    description: 'Understanding number relationships',
   }
 ];
 
@@ -85,12 +68,12 @@ const Knowledge: React.FC = () => {
         <h2 className="text-lg font-semibold mb-4">All Topics</h2>
         
         <div className="space-y-4">
-          {topics.map(topic => (
+          {Object.values(levels).map(level => (
             <TopicCard
-              key={topic.id}
-              id={topic.id}
-              title={topic.title}
-              description={topic.description}
+              key={level.id}
+              id={level.id}
+              title={level.name}
+              description={level.description}
             />
           ))}
         </div>
