@@ -38,7 +38,7 @@ const PracticeSession: React.FC = () => {
   const currentQuestion = sessionComplete ? null : questions[currentIndex];
   
   const handleContinuePractice = () => {
-    // Restart the session with the same level instead of navigating to practice menu
+    // Call restartSession directly instead of navigating
     restartSession();
   };
   
