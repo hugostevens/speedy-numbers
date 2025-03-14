@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
@@ -55,7 +56,7 @@ const Auth: React.FC = () => {
         // by using the signUp method with custom options
         const { error } = await supabase.auth.signUp({
           email,
-          password: password.padEnd(6, '0'), // Pad to meet min 6 char requirement
+          password: password + '00', // Pad to meet min 6 char requirement
           options: {
             data: {
               original_pin: password // Store the original 4-digit PIN for reference
@@ -70,7 +71,7 @@ const Auth: React.FC = () => {
         // For sign in, we need to also pad the password
         const { error } = await supabase.auth.signInWithPassword({
           email,
-          password: password.padEnd(6, '0') // Pad to meet min 6 char requirement
+          password: password + '00' // Pad to meet min 6 char requirement
         });
         
         if (error) throw error;
