@@ -7,7 +7,7 @@ import SessionHeader from '@/components/practice/SessionHeader';
 import AnswerInput from '@/components/practice/AnswerInput';
 import { usePracticeSession } from '@/hooks/usePracticeSession';
 import { levels } from '@/data/mathLevels';
-import { Award, AlertCircle, Check, ArrowRight, MessageSquareQuestion, Home } from 'lucide-react';
+import { Award, AlertCircle, Check, ArrowRight, HelpCircle, Home } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useNavigate } from 'react-router-dom';
 
@@ -113,7 +113,7 @@ const PracticeSession: React.FC = () => {
             </Button>
             
             <Button onClick={handleGetHelp} variant="outline" className="w-full justify-start">
-              <MessageSquareQuestion className="mr-2" />
+              <HelpCircle className="mr-2" />
               Get some help
             </Button>
             
