@@ -7,7 +7,7 @@ import SessionHeader from '@/components/practice/SessionHeader';
 import AnswerInput from '@/components/practice/AnswerInput';
 import { usePracticeSession } from '@/hooks/usePracticeSession';
 import { levels } from '@/data/mathLevels';
-import { Award, AlertCircle } from 'lucide-react';
+import { Award, AlertCircle, Check } from 'lucide-react';
 
 const PracticeSession: React.FC = () => {
   const { levelId } = useParams<{ levelId: string }>();
@@ -20,6 +20,7 @@ const PracticeSession: React.FC = () => {
     showFeedback,
     answerTime,
     masteryInfo,
+    sessionComplete,
     handleNumberClick,
     handleResetInput,
     handleCheckAnswer
@@ -29,7 +30,8 @@ const PracticeSession: React.FC = () => {
     return <div className="page-container">Loading...</div>;
   }
   
-  const currentQuestion = questions[currentIndex];
+  // Don't access current question if session is complete
+  const currentQuestion = sessionComplete ? null : questions[currentIndex];
   
   return (
     <div className="page-container">
@@ -38,44 +40,58 @@ const PracticeSession: React.FC = () => {
         showBackButton
       />
       
-      <SessionHeader 
-        currentIndex={currentIndex}
-        totalQuestions={questions.length}
-        level={level!}
-      />
-      
-      {masteryInfo && (
-        <div className="flex justify-center mb-2">
-          {masteryInfo.isMastered && (
-            <div className="inline-flex items-center text-sm text-green-600 bg-green-50 px-3 py-1 rounded-full">
-              <Award className="h-4 w-4 mr-1" />
-              <span>Mastered</span>
+      {!sessionComplete ? (
+        <>
+          <SessionHeader 
+            currentIndex={currentIndex}
+            totalQuestions={questions.length}
+            level={level!}
+          />
+          
+          {masteryInfo && (
+            <div className="flex justify-center mb-2">
+              {masteryInfo.isMastered && (
+                <div className="inline-flex items-center text-sm text-green-600 bg-green-50 px-3 py-1 rounded-full">
+                  <Award className="h-4 w-4 mr-1" />
+                  <span>Mastered</span>
+                </div>
+              )}
+              
+              {masteryInfo.isStruggling && (
+                <div className="inline-flex items-center text-sm text-amber-600 bg-amber-50 px-3 py-1 rounded-full">
+                  <AlertCircle className="h-4 w-4 mr-1" />
+                  <span>Practice needed</span>
+                </div>
+              )}
             </div>
           )}
           
-          {masteryInfo.isStruggling && (
-            <div className="inline-flex items-center text-sm text-amber-600 bg-amber-50 px-3 py-1 rounded-full">
-              <AlertCircle className="h-4 w-4 mr-1" />
-              <span>Practice needed</span>
-            </div>
+          {currentQuestion && (
+            <MathProblem 
+              question={currentQuestion}
+              userInput={userInput}
+              showFeedback={showFeedback}
+              answerTime={answerTime}
+            />
           )}
+          
+          <AnswerInput 
+            userInput={userInput}
+            showFeedback={showFeedback}
+            onNumberClick={handleNumberClick}
+            onResetInput={handleResetInput}
+            onCheckAnswer={handleCheckAnswer}
+          />
+        </>
+      ) : (
+        <div className="text-center py-16">
+          <div className="inline-flex items-center justify-center w-20 h-20 bg-green-100 rounded-full mb-4">
+            <Check className="h-10 w-10 text-green-600" />
+          </div>
+          <h2 className="text-2xl font-bold mb-2">Practice Complete!</h2>
+          <p className="text-muted-foreground">Redirecting to practice menu...</p>
         </div>
       )}
-      
-      <MathProblem 
-        question={currentQuestion}
-        userInput={userInput}
-        showFeedback={showFeedback}
-        answerTime={answerTime}
-      />
-      
-      <AnswerInput 
-        userInput={userInput}
-        showFeedback={showFeedback}
-        onNumberClick={handleNumberClick}
-        onResetInput={handleResetInput}
-        onCheckAnswer={handleCheckAnswer}
-      />
     </div>
   );
 };

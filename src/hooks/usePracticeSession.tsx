@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
@@ -17,6 +18,7 @@ export const usePracticeSession = (levelId: string | undefined, level: MathLevel
   const [score, setScore] = useState(0);
   const [startTime, setStartTime] = useState<number>(0);
   const [answerTime, setAnswerTime] = useState<number>(0);
+  const [sessionComplete, setSessionComplete] = useState(false);
   const [masteryInfo, setMasteryInfo] = useState<{
     isMastered: boolean;
     isStruggling: boolean;
@@ -221,7 +223,7 @@ export const usePracticeSession = (levelId: string | undefined, level: MathLevel
   };
   
   const handleNumberClick = (num: number) => {
-    if (showFeedback) return;
+    if (showFeedback || sessionComplete) return;
     
     if (userInput.length < 2) {
       setUserInput(prev => prev + num);
@@ -229,13 +231,13 @@ export const usePracticeSession = (levelId: string | undefined, level: MathLevel
   };
   
   const handleResetInput = () => {
-    if (showFeedback) return;
+    if (showFeedback || sessionComplete) return;
     
     setUserInput('');
   };
   
   const handleCheckAnswer = () => {
-    if (!userInput || showFeedback) return;
+    if (!userInput || showFeedback || sessionComplete) return;
     
     const endTime = Date.now();
     const timeTaken = (endTime - startTime) / 1000;
@@ -262,20 +264,27 @@ export const usePracticeSession = (levelId: string | undefined, level: MathLevel
     
     updateQuestionPerformance(currentQuestion, isCorrect, timeTaken);
     
+    // Check if this is the last question
+    const isLastQuestion = currentIndex >= questions.length - 1;
+    
     setTimeout(() => {
-      if (currentIndex < questions.length - 1) {
+      if (!isLastQuestion) {
+        // Move to next question
         setCurrentIndex(prev => prev + 1);
         setUserInput('');
         setShowFeedback(false);
       } else {
-        const percentCorrect = (score + (isCorrect ? 1 : 0)) / questions.length * 100;
+        // End the session
+        setSessionComplete(true);
+        const finalScore = score + (isCorrect ? 1 : 0);
+        const percentCorrect = finalScore / questions.length * 100;
         
         updateDailyGoal(1);
-        
         checkAndUpdateStreak();
         
-        toast.success(`Practice completed! Score: ${score + (isCorrect ? 1 : 0)}/${questions.length}`);
+        toast.success(`Practice completed! Score: ${finalScore}/${questions.length}`);
         
+        // Navigate away from the practice session after a delay
         setTimeout(() => {
           navigate('/practice');
         }, 2000);
@@ -290,6 +299,7 @@ export const usePracticeSession = (levelId: string | undefined, level: MathLevel
     showFeedback,
     answerTime,
     masteryInfo,
+    sessionComplete,
     handleNumberClick,
     handleResetInput,
     handleCheckAnswer
