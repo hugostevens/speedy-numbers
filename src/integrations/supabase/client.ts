@@ -6,7 +6,7 @@ import type { Database } from './types';
 const SUPABASE_URL = "https://fuinfdfrboxmawzfbtbd.supabase.co";
 const SUPABASE_PUBLISHABLE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZ1aW5mZGZyYm94bWF3emZidGJkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDE5MTE3NTUsImV4cCI6MjA1NzQ4Nzc1NX0.5N4n-rqrOyL-Q2Y8Wal5UFxcz7Gru9z85unjQ_dzZfo";
 
-// Create Supabase client with persistent sessions enabled
+// Create Supabase client with enhanced session persistence settings
 export const supabase = createClient<Database>(
   SUPABASE_URL, 
   SUPABASE_PUBLISHABLE_KEY,
@@ -14,7 +14,36 @@ export const supabase = createClient<Database>(
     auth: {
       persistSession: true,
       autoRefreshToken: true,
+      detectSessionInUrl: false,
       storageKey: 'math-app-auth-token',
+      storage: {
+        getItem: (key) => {
+          try {
+            const itemStr = localStorage.getItem(key);
+            if (!itemStr) return null;
+            
+            const item = JSON.parse(itemStr);
+            return item;
+          } catch (error) {
+            console.error('Error retrieving auth session:', error);
+            return null;
+          }
+        },
+        setItem: (key, value) => {
+          try {
+            localStorage.setItem(key, JSON.stringify(value));
+          } catch (error) {
+            console.error('Error storing auth session:', error);
+          }
+        },
+        removeItem: (key) => {
+          try {
+            localStorage.removeItem(key);
+          } catch (error) {
+            console.error('Error removing auth session:', error);
+          }
+        }
+      }
     }
   }
 );

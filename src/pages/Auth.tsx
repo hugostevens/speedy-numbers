@@ -14,26 +14,35 @@ const Auth: React.FC = () => {
   const [password, setPassword] = useState('');
   const [isSignUp, setIsSignUp] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [checkingSession, setCheckingSession] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const navigate = useNavigate();
-  const { user, session } = useUser();
+  const { user } = useUser();
   
-  // If user is already logged in, redirect to home
+  // Enhanced session check
   useEffect(() => {
     const checkSession = async () => {
+      setCheckingSession(true);
       try {
+        console.log("Checking session on Auth page");
         const { data, error } = await supabase.auth.getSession();
+        
         if (error) {
           console.error("Session check error:", error);
-          return;
-        }
-        
-        if (data.session) {
-          console.log("User already has a valid session, redirecting to home");
+          // Clear potentially corrupted session data
+          await supabase.auth.signOut();
+          localStorage.removeItem('math-app-auth-token');
+        } else if (data.session) {
+          console.log("Valid session found, redirecting to home");
           navigate('/');
         }
       } catch (err) {
-        console.error("Error checking session:", err);
+        console.error("Unexpected error checking session:", err);
+        // Clear potentially corrupted session data
+        await supabase.auth.signOut();
+        localStorage.removeItem('math-app-auth-token');
+      } finally {
+        setCheckingSession(false);
       }
     };
     
@@ -106,12 +115,30 @@ const Auth: React.FC = () => {
         }
       }
     } catch (err: any) {
-      setError(err.message || 'An error occurred during authentication');
       console.error('Auth error:', err);
+      
+      // More specific error messages
+      if (err.message.includes('Email not confirmed')) {
+        setError('Please check your email and confirm your account before logging in.');
+      } else if (err.message.includes('Invalid login credentials')) {
+        setError('Invalid email or password. Please try again.');
+      } else {
+        setError(err.message || 'An error occurred during authentication');
+      }
     } finally {
       setLoading(false);
     }
   };
+  
+  if (checkingSession) {
+    return (
+      <div className="page-container flex items-center justify-center py-10">
+        <div className="math-card w-full max-w-md p-6 text-center">
+          <p>Checking login status...</p>
+        </div>
+      </div>
+    );
+  }
   
   return (
     <div className="page-container flex items-center justify-center py-10">
