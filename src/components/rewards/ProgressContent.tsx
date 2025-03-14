@@ -29,7 +29,7 @@ const ProgressContent: React.FC = () => {
   
   useEffect(() => {
     const fetchUserProgress = async () => {
-      if (!user || !user.session) {
+      if (!user) {
         setIsLoading(false);
         return;
       }
@@ -107,7 +107,7 @@ const ProgressContent: React.FC = () => {
     return <div className="flex justify-center p-8">Loading your progress...</div>;
   }
   
-  if (!user?.session) {
+  if (!user) {
     return (
       <div className="math-card p-6 text-center">
         <p className="mb-4">Please log in to view your progress.</p>
