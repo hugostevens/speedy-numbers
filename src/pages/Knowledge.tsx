@@ -54,6 +54,18 @@ const Knowledge: React.FC = () => {
     <div className="page-container">
       <PageHeader title="Knowledge" showBackButton />
       
+      <div className="mb-6">
+        <h2 className="text-lg font-semibold mb-4">Recommended for you</h2>
+        
+        {recommendedResources.map(resource => (
+          <ResourceCard 
+            key={resource.id}
+            resource={resource}
+            onSelect={handleResourceSelect}
+          />
+        ))}
+      </div>
+      
       <div className="math-card mb-6 bg-soft-blue">
         <h2 className="text-lg font-semibold mb-2">Need help?</h2>
         <p className="text-sm text-muted-foreground mb-4">
@@ -67,18 +79,6 @@ const Knowledge: React.FC = () => {
           <MessageCircleQuestion className="mr-2" />
           Ask a Question
         </Button>
-      </div>
-      
-      <div className="mb-6">
-        <h2 className="text-lg font-semibold mb-4">Recommended for you</h2>
-        
-        {recommendedResources.map(resource => (
-          <ResourceCard 
-            key={resource.id}
-            resource={resource}
-            onSelect={handleResourceSelect}
-          />
-        ))}
       </div>
       
       <div>
