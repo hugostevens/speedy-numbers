@@ -132,56 +132,64 @@ const checkMasteryBadges = async (userId: string): Promise<Badge[]> => {
       });
     }
     
-    // Count mastered questions by operation for operation-specific badges
-    const { data: operationCounts, error: countError } = await supabase
+    // Instead of using group, we'll fetch all records and count them in JavaScript
+    const { data: performanceData, error: countError } = await supabase
       .from('user_question_performance')
-      .select('operation, count')
+      .select('operation, fast_correct_attempts')
       .eq('user_id', userId)
-      .gte('fast_correct_attempts', 5)
-      .group('operation');
+      .gte('fast_correct_attempts', 5);
       
     if (countError) {
       console.error('Error counting mastery by operation:', countError);
       return newBadges;
     }
     
+    // Count mastered questions by operation
+    const operationCounts: Record<string, number> = {};
+    performanceData?.forEach(record => {
+      const op = record.operation;
+      operationCounts[op] = (operationCounts[op] || 0) + 1;
+    });
+    
     // Check for operation-specific mastery badges
-    if (operationCounts) {
-      for (const opCount of operationCounts) {
-        if (opCount.operation === 'addition' && Number(opCount.count) >= 5) {
-          newBadges.push({
-            id: 'addition-master',
-            name: 'Addition Master',
-            description: 'Mastered 5 addition facts',
-            icon: 'trophy',
-            completed: true
-          });
-        } else if (opCount.operation === 'subtraction' && Number(opCount.count) >= 5) {
-          newBadges.push({
-            id: 'subtraction-master',
-            name: 'Subtraction Master',
-            description: 'Mastered 5 subtraction facts',
-            icon: 'trophy',
-            completed: true
-          });
-        } else if (opCount.operation === 'multiplication' && Number(opCount.count) >= 5) {
-          newBadges.push({
-            id: 'multiplication-master',
-            name: 'Multiplication Master',
-            description: 'Mastered 5 multiplication facts',
-            icon: 'trophy',
-            completed: true
-          });
-        } else if (opCount.operation === 'division' && Number(opCount.count) >= 5) {
-          newBadges.push({
-            id: 'division-master',
-            name: 'Division Master',
-            description: 'Mastered 5 division facts',
-            icon: 'trophy',
-            completed: true
-          });
-        }
-      }
+    if (operationCounts['addition'] && operationCounts['addition'] >= 5) {
+      newBadges.push({
+        id: 'addition-master',
+        name: 'Addition Master',
+        description: 'Mastered 5 addition facts',
+        icon: 'trophy',
+        completed: true
+      });
+    }
+    
+    if (operationCounts['subtraction'] && operationCounts['subtraction'] >= 5) {
+      newBadges.push({
+        id: 'subtraction-master',
+        name: 'Subtraction Master',
+        description: 'Mastered 5 subtraction facts',
+        icon: 'trophy',
+        completed: true
+      });
+    }
+    
+    if (operationCounts['multiplication'] && operationCounts['multiplication'] >= 5) {
+      newBadges.push({
+        id: 'multiplication-master',
+        name: 'Multiplication Master',
+        description: 'Mastered 5 multiplication facts',
+        icon: 'trophy',
+        completed: true
+      });
+    }
+    
+    if (operationCounts['division'] && operationCounts['division'] >= 5) {
+      newBadges.push({
+        id: 'division-master',
+        name: 'Division Master',
+        description: 'Mastered 5 division facts',
+        icon: 'trophy',
+        completed: true
+      });
     }
     
     return newBadges;
