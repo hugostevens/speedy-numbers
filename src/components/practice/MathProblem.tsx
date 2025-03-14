@@ -39,6 +39,7 @@ const MathProblem: React.FC<MathProblemProps> = ({
           }`}
           value={userInput}
           readOnly
+          aria-label="Your answer"
         />
         
         {showFeedback && (

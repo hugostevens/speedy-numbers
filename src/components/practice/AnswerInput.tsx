@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useEffect } from 'react';
 import NumberPad from '@/components/practice/NumberPad';
 import { Button } from '@/components/ui/button';
 import { CheckCircle, RotateCcw } from 'lucide-react';
@@ -19,6 +19,34 @@ const AnswerInput: React.FC<AnswerInputProps> = ({
   onResetInput,
   onCheckAnswer,
 }) => {
+  // Add keyboard event listener
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      // Prevent handling keyboard events when showing feedback
+      if (showFeedback) return;
+      
+      // Handle numeric keys (0-9)
+      if (/^[0-9]$/.test(e.key)) {
+        onNumberClick(parseInt(e.key));
+      } 
+      // Handle Enter key for checking answer
+      else if (e.key === 'Enter' && userInput) {
+        onCheckAnswer();
+      } 
+      // Handle Backspace/Delete for clearing input
+      else if ((e.key === 'Backspace' || e.key === 'Delete') && userInput) {
+        onResetInput();
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    
+    // Cleanup the event listener on component unmount
+    return () => {
+      window.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [userInput, showFeedback, onNumberClick, onResetInput, onCheckAnswer]);
+
   return (
     <div className="mt-8">
       <div className="flex justify-between gap-3 mb-6">
@@ -49,9 +77,15 @@ const AnswerInput: React.FC<AnswerInputProps> = ({
         )}
       </div>
       
+      <div className="mb-6 text-center">
+        <p className="text-sm text-muted-foreground">
+          Type your answer using keyboard or tap the numbers below
+        </p>
+      </div>
+      
       <NumberPad
         onNumberClick={onNumberClick}
-        onDeleteClick={() => {}} // This is not used anymore but kept for compatibility
+        onDeleteClick={onResetInput}
       />
     </div>
   );
