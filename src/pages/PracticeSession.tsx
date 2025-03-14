@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
@@ -8,7 +7,7 @@ import MathProblem from '@/components/practice/MathProblem';
 import { Progress } from '@/components/ui/progress';
 import { MathQuestion, MathLevel } from '@/types';
 import { generateQuestionSet, formatOperation } from '@/lib/math';
-import { useUser } from '@/context/UserContext';
+import { useUser } from '@/context/user';
 
 const levels: Record<string, MathLevel> = {
   'addition-0-10': {
@@ -72,7 +71,6 @@ const PracticeSession: React.FC = () => {
   const handleNumberClick = (num: number) => {
     if (showFeedback) return;
     
-    // Limit to 2 digits for simplicity
     if (userInput.length < 2) {
       setUserInput(prev => prev + num);
     }
@@ -91,7 +89,6 @@ const PracticeSession: React.FC = () => {
     const currentQuestion = questions[currentIndex];
     const isCorrect = userAnswer === currentQuestion.answer;
     
-    // Update question with user's answer
     const updatedQuestions = [...questions];
     updatedQuestions[currentIndex] = {
       ...currentQuestion,
@@ -106,23 +103,18 @@ const PracticeSession: React.FC = () => {
       setScore(prev => prev + 1);
     }
     
-    // Move to next question after a delay
     setTimeout(() => {
       if (currentIndex < questions.length - 1) {
         setCurrentIndex(prev => prev + 1);
         setUserInput('');
         setShowFeedback(false);
       } else {
-        // Session completed
         const percentCorrect = (score + (isCorrect ? 1 : 0)) / questions.length * 100;
         
-        // Update daily goal
         updateDailyGoal(1);
         
-        // Show completion message
         toast.success(`Practice completed! Score: ${score + (isCorrect ? 1 : 0)}/${questions.length}`);
         
-        // Navigate back to practice menu
         setTimeout(() => {
           navigate('/practice');
         }, 2000);
