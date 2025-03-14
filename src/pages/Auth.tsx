@@ -67,17 +67,24 @@ const Auth: React.FC = () => {
         if (error) throw error;
         
         toast.success('Account created! Please check your email to verify your account.');
+        setLoading(false);
       } else {
         // For sign in, we need to also pad the password
-        const { error } = await supabase.auth.signInWithPassword({
+        const { data, error } = await supabase.auth.signInWithPassword({
           email,
           password: password + '00' // Pad to meet min 6 char requirement
         });
         
         if (error) throw error;
         
-        toast.success('Logged in successfully!');
-        navigate('/');
+        // If we successfully logged in, we should have data with a session
+        if (data && data.session) {
+          toast.success('Logged in successfully!');
+          navigate('/');
+        } else {
+          // This should rarely happen, but just in case
+          setError('Login successful but session not created. Please try again.');
+        }
       }
     } catch (err: any) {
       setError(err.message || 'An error occurred during authentication');
