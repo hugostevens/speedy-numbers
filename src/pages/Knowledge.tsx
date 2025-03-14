@@ -119,6 +119,11 @@ const Knowledge: React.FC = () => {
                 key={question.id}
                 resource={createResourceFromQuestion(question)}
                 onSelect={handleResourceSelect}
+                num1={question.num1}
+                num2={question.num2}
+                operation={question.operation}
+                answer={question.answer}
+                showHelpButton={true}
               />
             ))}
           </>
