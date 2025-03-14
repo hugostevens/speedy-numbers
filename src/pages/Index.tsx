@@ -12,7 +12,7 @@ import { supabase } from '@/integrations/supabase/client';
 
 const Index: React.FC = () => {
   const navigate = useNavigate();
-  const { user, isLoading } = useUser();
+  const { user, isLoading, checkAndAwardBadges } = useUser();
 
   // Verify Supabase session on page load
   useEffect(() => {
@@ -23,6 +23,13 @@ const Index: React.FC = () => {
     
     checkSession();
   }, []);
+
+  // Check for badges when the user visits the home page
+  useEffect(() => {
+    if (user) {
+      checkAndAwardBadges();
+    }
+  }, [user, checkAndAwardBadges]);
 
   if (isLoading) {
     return <div className="page-container">Loading...</div>;

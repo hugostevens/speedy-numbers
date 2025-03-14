@@ -26,13 +26,18 @@ const BadgeIcon: React.FC<{ badge: BadgeType }> = ({ badge }) => {
 };
 
 const RecentRewards: React.FC = () => {
-  const { user } = useUser();
+  const { user, checkAndAwardBadges } = useUser();
   const navigate = useNavigate();
   
+  // If no user is logged in, don't render anything
   if (!user) return null;
+
+  // Ensure badges are up-to-date
+  React.useEffect(() => {
+    checkAndAwardBadges();
+  }, [checkAndAwardBadges]);
   
   // Sort badges by recent completion (assuming all completed badges are equally recent for now)
-  // In a real app, you might want to store completion dates in the badge objects
   const recentBadges = user.badges
     .filter(badge => badge.completed)
     .slice(0, 3);

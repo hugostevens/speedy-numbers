@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { Badge } from '@/types';
-import { Award, Star, Crown, Calendar, Trophy } from 'lucide-react';
+import { Award, Star, Crown, Calendar, Trophy, Flame } from 'lucide-react';
 import { Progress } from '@/components/ui/progress';
 
 interface BadgeCardProps {
@@ -10,14 +10,18 @@ interface BadgeCardProps {
 
 const BadgeIcon: React.FC<{ id: string }> = ({ id }) => {
   switch (id) {
-    case 'addition-pro':
-      return <Award className="w-10 h-10" />;
+    case 'first-day-streak':
     case '5-day-streak':
     case '10-day-streak':
-      return <Star className="w-10 h-10" />;
-    case 'level-up':
-      return <Trophy className="w-10 h-10" />;
+      return <Flame className="w-10 h-10" />;
+    case 'first-mastery':
+      return <Award className="w-10 h-10" />;
+    case 'addition-master':
+    case 'subtraction-master':
     case 'multiplication-master':
+    case 'division-master':
+      return <Trophy className="w-10 h-10" />;
+    case 'level-up':
       return <Crown className="w-10 h-10" />;
     default:
       return <Award className="w-10 h-10" />;

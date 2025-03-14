@@ -18,52 +18,6 @@ interface UserContextType {
   checkAndAwardBadges: () => Promise<void>;
 }
 
-const initialBadges: Badge[] = [
-  {
-    id: 'addition-pro',
-    name: 'Addition Pro',
-    description: 'Mastered addition facts',
-    icon: 'award',
-    completed: true,
-  },
-  {
-    id: '5-day-streak',
-    name: '5 Day Streak',
-    description: 'Practiced 5 days in a row',
-    icon: 'star',
-    completed: true,
-  },
-  {
-    id: 'level-up',
-    name: 'Level Up',
-    description: 'Reached level 3',
-    icon: 'trophy',
-    completed: true,
-  },
-  {
-    id: '10-day-streak',
-    name: '10 Day Streak',
-    description: 'Keep practicing daily',
-    icon: 'calendar',
-    completed: false,
-    progress: {
-      current: 5,
-      total: 10,
-    },
-  },
-  {
-    id: 'multiplication-master',
-    name: 'Multiplication Master',
-    description: 'Complete all multiplication exercises',
-    icon: 'crown',
-    completed: false,
-    progress: {
-      current: 3,
-      total: 10,
-    },
-  }
-];
-
 const UserContext = createContext<UserContextType>({
   user: null,
   session: null,
@@ -113,7 +67,7 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
         const streak = streakData?.current_streak || 0;
         const longestStreak = streakData?.longest_streak || 0;
 
-        const userData = {
+        const userData: UserProfile = {
           id: currentSession.user.id,
           name: currentSession.user.email?.split('@')[0] || 'User',
           avatar: currentSession.user.email?.substring(0, 2).toUpperCase() || 'U',
@@ -125,15 +79,19 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
             current: 6,
           },
           theme: 'space',
-          badges: initialBadges,
+          badges: [],
           recentActivity: [
             {
               date: new Date().toISOString(),
               action: 'Completed practice session',
             }
           ],
-          session: currentSession
         };
+        
+        const { earnedBadges } = await checkForNewBadges(currentSession.user.id);
+        if (earnedBadges.length > 0) {
+          userData.badges = earnedBadges;
+        }
         
         console.log('Setting user data:', userData);
         setUser(userData);
@@ -345,9 +303,25 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
         );
         
         if (newBadges.length > 0) {
-          newBadges.forEach(badge => {
-            addBadge(badge);
-            toast.success(`🏆 New badge: ${badge.name}`);
+          setUser(prev => {
+            if (!prev) return prev;
+            
+            const updatedBadges = [...prev.badges];
+            
+            newBadges.forEach(newBadge => {
+              const existingIndex = updatedBadges.findIndex(b => b.id === newBadge.id);
+              if (existingIndex >= 0) {
+                updatedBadges[existingIndex] = newBadge;
+              } else {
+                updatedBadges.push(newBadge);
+                toast.success(`🏆 New badge: ${newBadge.name}`);
+              }
+            });
+            
+            return {
+              ...prev,
+              badges: updatedBadges
+            };
           });
           
           console.log('New badges awarded:', newBadges);
