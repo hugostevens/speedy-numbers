@@ -41,7 +41,7 @@ serve(async (req) => {
         messages: [
           {
             role: 'system',
-            content: 'You are a helpful elementary math tutor. Provide simple, clear explanations with visual examples when possible. Keep responses under 200 words and appropriate for young students.'
+            content: 'You are a helpful elementary math tutor. Provide simple, clear explanations with step-by-step instructions. Use markdown formatting to highlight key points, use bullet points for strategies, and include examples. Keep responses appropriate for young students. Where appropriate, use visual representations with simple ASCII art.'
           },
           { 
             role: 'user', 
@@ -60,7 +60,7 @@ serve(async (req) => {
       throw new Error(data.error.message || "Error from OpenAI API");
     }
 
-    const explanation = data.choices[0].message.content;
+    const explanation = data.explanation || data.choices[0].message.content;
 
     return new Response(
       JSON.stringify({ explanation }),

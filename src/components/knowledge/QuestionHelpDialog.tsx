@@ -7,6 +7,7 @@ import { MathOperation } from '@/types';
 import { supabase } from '@/integrations/supabase/client';
 import { getOperationSymbol } from '@/lib/math';
 import { useToast } from '@/hooks/use-toast';
+import ReactMarkdown from 'react-markdown';
 
 interface QuestionHelpDialogProps {
   open: boolean;
@@ -91,8 +92,8 @@ const QuestionHelpDialog: React.FC<QuestionHelpDialogProps> = ({
                 {num1} {operationSymbol} {num2} = {answer}
               </p>
               {explanation && (
-                <div className="whitespace-pre-line">
-                  {explanation}
+                <div className="markdown-content">
+                  <ReactMarkdown>{explanation}</ReactMarkdown>
                 </div>
               )}
             </div>
