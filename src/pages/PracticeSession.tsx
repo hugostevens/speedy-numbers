@@ -8,7 +8,7 @@ import MathProblem from '@/components/practice/MathProblem';
 import { Progress } from '@/components/ui/progress';
 import { MathQuestion, MathLevel } from '@/types';
 import { generateQuestionSet, formatOperation } from '@/lib/math';
-import { useUser } from '@/context/user';
+import { useUser } from '@/context/UserContext';
 
 const levels: Record<string, MathLevel> = {
   'addition-0-10': {
@@ -51,61 +51,28 @@ const PracticeSession: React.FC = () => {
   const [userInput, setUserInput] = useState('');
   const [showFeedback, setShowFeedback] = useState(false);
   const [score, setScore] = useState(0);
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
   
   useEffect(() => {
-    // Reset state when component mounts
-    setQuestions([]);
-    setCurrentIndex(0);
-    setUserInput('');
-    setShowFeedback(false);
-    setScore(0);
-    setIsLoading(true);
-    setError(null);
-    
-    if (!levelId) {
-      setError("No level selected");
-      setIsLoading(false);
-      return;
-    }
-    
-    if (!levels[levelId]) {
-      setError(`Invalid level: ${levelId}`);
-      setIsLoading(false);
-      toast.error("Invalid practice level selected");
+    if (!levelId || !levels[levelId]) {
       navigate('/practice');
       return;
     }
     
-    try {
-      const level = levels[levelId];
-      const questionSet = generateQuestionSet(
-        level.operation,
-        5,
-        level.range[0],
-        level.range[1]
-      );
-      
-      console.log("Generated question set:", questionSet);
-      
-      if (questionSet.length === 0) {
-        throw new Error("Failed to generate questions");
-      }
-      
-      setQuestions(questionSet);
-      setIsLoading(false);
-    } catch (err) {
-      console.error("Error generating questions:", err);
-      setError("Failed to load questions");
-      setIsLoading(false);
-      toast.error("Error loading practice session");
-    }
+    const level = levels[levelId];
+    const questionSet = generateQuestionSet(
+      level.operation,
+      5,
+      level.range[0],
+      level.range[1]
+    );
+    
+    setQuestions(questionSet);
   }, [levelId, navigate]);
   
   const handleNumberClick = (num: number) => {
     if (showFeedback) return;
     
+    // Limit to 2 digits for simplicity
     if (userInput.length < 2) {
       setUserInput(prev => prev + num);
     }
@@ -124,6 +91,7 @@ const PracticeSession: React.FC = () => {
     const currentQuestion = questions[currentIndex];
     const isCorrect = userAnswer === currentQuestion.answer;
     
+    // Update question with user's answer
     const updatedQuestions = [...questions];
     updatedQuestions[currentIndex] = {
       ...currentQuestion,
@@ -138,18 +106,23 @@ const PracticeSession: React.FC = () => {
       setScore(prev => prev + 1);
     }
     
+    // Move to next question after a delay
     setTimeout(() => {
       if (currentIndex < questions.length - 1) {
         setCurrentIndex(prev => prev + 1);
         setUserInput('');
         setShowFeedback(false);
       } else {
+        // Session completed
         const percentCorrect = (score + (isCorrect ? 1 : 0)) / questions.length * 100;
         
+        // Update daily goal
         updateDailyGoal(1);
         
+        // Show completion message
         toast.success(`Practice completed! Score: ${score + (isCorrect ? 1 : 0)}/${questions.length}`);
         
+        // Navigate back to practice menu
         setTimeout(() => {
           navigate('/practice');
         }, 2000);
@@ -157,37 +130,8 @@ const PracticeSession: React.FC = () => {
     }, 1500);
   };
   
-  if (isLoading) {
-    return (
-      <div className="page-container">
-        <PageHeader title="Practice" showBackButton />
-        <div className="flex items-center justify-center h-[50vh]">
-          <div className="text-center">
-            <div className="mb-4 text-muted-foreground">Loading practice questions...</div>
-            <Progress value={100} className="h-2 w-40 animate-pulse" />
-          </div>
-        </div>
-      </div>
-    );
-  }
-  
-  if (error || questions.length === 0) {
-    return (
-      <div className="page-container">
-        <PageHeader title="Practice" showBackButton />
-        <div className="flex flex-col items-center justify-center h-[50vh] gap-4">
-          <div className="text-lg font-medium text-center text-destructive">
-            {error || "No questions available for this level."}
-          </div>
-          <button
-            onClick={() => navigate('/practice')}
-            className="bg-primary text-primary-foreground hover:bg-primary/90 px-4 py-2 rounded-lg"
-          >
-            Back to Practice Menu
-          </button>
-        </div>
-      </div>
-    );
+  if (questions.length === 0) {
+    return <div className="page-container">Loading...</div>;
   }
   
   const level = levels[levelId!];

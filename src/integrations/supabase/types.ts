@@ -14,21 +14,18 @@ export type Database = {
           created_at: string
           email: string
           id: string
-          name: string | null
           updated_at: string
         }
         Insert: {
           created_at?: string
           email: string
           id: string
-          name?: string | null
           updated_at?: string
         }
         Update: {
           created_at?: string
           email?: string
           id?: string
-          name?: string | null
           updated_at?: string
         }
         Relationships: []
@@ -38,13 +35,7 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      update_user_display_name: {
-        Args: {
-          user_id: string
-          new_name: string
-        }
-        Returns: undefined
-      }
+      [_ in never]: never
     }
     Enums: {
       [_ in never]: never

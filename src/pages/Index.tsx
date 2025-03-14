@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useUser } from '@/context/user';
+import { useUser } from '@/context/UserContext';
 import UserHeader from '@/components/dashboard/UserHeader';
 import StreakCard from '@/components/dashboard/StreakCard';
 import RecentRewards from '@/components/dashboard/RecentRewards';

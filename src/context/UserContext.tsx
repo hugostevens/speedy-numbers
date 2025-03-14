@@ -1,13 +1,96 @@
-
-import React, { useState, useEffect } from 'react';
+import React, { createContext, useContext, useState, useEffect } from 'react';
+import { UserProfile, Badge } from '@/types';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
 import { Session } from '@supabase/supabase-js';
-import { Badge } from '@/types';
-import UserContext from './UserContext';
-import { UserProfile } from './types';
-import { initialUser } from './initialData';
-import { fetchUserProfile, signOutUser } from './userApi';
+
+interface UserContextType {
+  user: UserProfile | null;
+  session: Session | null;
+  isLoading: boolean;
+  updateStreak: (increment: boolean) => void;
+  updateDailyGoal: (progress: number) => void;
+  addBadge: (badge: Badge) => void;
+  updateTheme: (theme: string) => void;
+  signOut: () => Promise<void>;
+}
+
+const initialBadges: Badge[] = [
+  {
+    id: 'addition-pro',
+    name: 'Addition Pro',
+    description: 'Mastered addition facts',
+    icon: 'award',
+    completed: true,
+  },
+  {
+    id: '5-day-streak',
+    name: '5 Day Streak',
+    description: 'Practiced 5 days in a row',
+    icon: 'star',
+    completed: true,
+  },
+  {
+    id: 'level-up',
+    name: 'Level Up',
+    description: 'Reached level 3',
+    icon: 'trophy',
+    completed: true,
+  },
+  {
+    id: '10-day-streak',
+    name: '10 Day Streak',
+    description: 'Keep practicing daily',
+    icon: 'calendar',
+    completed: false,
+    progress: {
+      current: 5,
+      total: 10,
+    },
+  },
+  {
+    id: 'multiplication-master',
+    name: 'Multiplication Master',
+    description: 'Complete all multiplication exercises',
+    icon: 'crown',
+    completed: false,
+    progress: {
+      current: 3,
+      total: 10,
+    },
+  }
+];
+
+const initialUser: UserProfile = {
+  id: '1',
+  name: 'Jamie',
+  avatar: 'JD',
+  level: 3,
+  streak: 5,
+  dailyGoal: {
+    target: 10,
+    current: 6,
+  },
+  theme: 'space',
+  badges: initialBadges,
+  recentActivity: [
+    {
+      date: new Date().toISOString(),
+      action: 'Completed practice session',
+    }
+  ]
+};
+
+const UserContext = createContext<UserContextType>({
+  user: null,
+  session: null,
+  isLoading: true,
+  updateStreak: () => {},
+  updateDailyGoal: () => {},
+  addBadge: () => {},
+  updateTheme: () => {},
+  signOut: async () => {},
+});
 
 export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [user, setUser] = useState<UserProfile | null>(null);
@@ -16,24 +99,20 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   useEffect(() => {
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      async (_event, session) => {
+      (_event, session) => {
         setSession(session);
-        setIsLoading(true);
+        setIsLoading(false);
         
         if (session?.user) {
-          const profile = await fetchUserProfile(session.user.id);
-          
           setUser({
             ...initialUser,
             id: session.user.id,
-            name: profile?.name || session.user.email?.split('@')[0] || 'User',
-            avatar: (profile?.name || session.user.email?.substring(0, 2) || 'U').substring(0, 2).toUpperCase(),
+            name: session.user.email?.split('@')[0] || 'User',
+            avatar: session.user.email?.substring(0, 2).toUpperCase() || 'U',
           });
         } else {
           setUser(null);
         }
-        
-        setIsLoading(false);
       }
     );
 
@@ -42,13 +121,11 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
       setSession(session);
       
       if (session?.user) {
-        const profile = await fetchUserProfile(session.user.id);
-        
         setUser({
           ...initialUser,
           id: session.user.id,
-          name: profile?.name || session.user.email?.split('@')[0] || 'User',
-          avatar: (profile?.name || session.user.email?.substring(0, 2) || 'U').substring(0, 2).toUpperCase(),
+          name: session.user.email?.split('@')[0] || 'User',
+          avatar: session.user.email?.substring(0, 2).toUpperCase() || 'U',
         });
       }
       
@@ -127,7 +204,7 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   const signOut = async () => {
-    await signOutUser();
+    await supabase.auth.signOut();
     setUser(null);
     setSession(null);
     toast.success('Signed out successfully');
@@ -149,4 +226,4 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
   );
 };
 
-export default UserProvider;
+export const useUser = () => useContext(UserContext);
