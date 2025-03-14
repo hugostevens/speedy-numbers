@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import PageHeader from '@/components/layout/PageHeader';
 import ResourceCard from '@/components/knowledge/ResourceCard';
@@ -157,7 +156,7 @@ const Knowledge: React.FC = () => {
       </div>
       
       <div className="math-card mb-6 bg-soft-blue">
-        <h2 className="text-lg font-semibold mb-2">Need help?</h2>
+        <h2 className="text-lg font-semibold mb-2">Need help with anything else?</h2>
         <p className="text-sm text-muted-foreground mb-4">
           Have a question about a math problem or concept? Ask for help!
         </p>
