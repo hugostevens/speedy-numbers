@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
@@ -20,13 +19,11 @@ const Auth: React.FC = () => {
   const { user } = useUser();
   const sessionCheckTimeoutRef = useRef<number | null>(null);
   
-  // Enhanced session check with timeout
   useEffect(() => {
     const checkSession = async () => {
       setCheckingSession(true);
       
-      // Create a promise that will resolve after 5 seconds
-      const timeoutPromise = new Promise(resolve => {
+      const timeoutPromise = new Promise<null>(resolve => {
         sessionCheckTimeoutRef.current = window.setTimeout(() => {
           console.warn("Session check timed out after 5 seconds");
           resolve(null);
@@ -36,41 +33,35 @@ const Auth: React.FC = () => {
       try {
         console.log("Checking session on Auth page");
         
-        // Race between the session check and the timeout
         const result = await Promise.race([
           supabase.auth.getSession(),
           timeoutPromise
         ]);
         
-        // Clear the timeout if the session check resolved first
         if (sessionCheckTimeoutRef.current) {
           clearTimeout(sessionCheckTimeoutRef.current);
           sessionCheckTimeoutRef.current = null;
         }
         
-        // If the session check resolved (not the timeout)
-        if (result && 'data' in result) {
+        if (result !== null && 'data' in result) {
           const { data, error } = result;
           
           if (error) {
             console.error("Session check error:", error);
-            // Clear potentially corrupted session data
             await supabase.auth.signOut();
             localStorage.removeItem('math-app-auth-token');
-          } else if (data.session) {
+          } else if (data && data.session) {
             console.log("Valid session found, redirecting to home");
             navigate('/');
             return;
           }
         } else {
-          // The timeout won, clear any session data to be safe
           console.warn("Session check timed out, clearing session");
           await supabase.auth.signOut();
           localStorage.removeItem('math-app-auth-token');
         }
       } catch (err) {
         console.error("Unexpected error checking session:", err);
-        // Clear potentially corrupted session data
         await supabase.auth.signOut();
         localStorage.removeItem('math-app-auth-token');
       } finally {
@@ -84,7 +75,6 @@ const Auth: React.FC = () => {
       checkSession();
     }
     
-    // Cleanup function to clear timeout if component unmounts
     return () => {
       if (sessionCheckTimeoutRef.current) {
         clearTimeout(sessionCheckTimeoutRef.current);
@@ -92,10 +82,8 @@ const Auth: React.FC = () => {
     };
   }, [user, navigate]);
 
-  // Handle pin input for password - restrict to 4 digits
   const handlePinInput = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value;
-    // Only allow digits and limit to 4 characters
     if (/^\d{0,4}$/.test(value)) {
       setPassword(value);
     }
@@ -119,14 +107,12 @@ const Auth: React.FC = () => {
     
     try {
       if (isSignUp) {
-        // For signup, we need to add custom password validation
-        // by using the signUp method with custom options
         const { error } = await supabase.auth.signUp({
           email,
-          password: password + '00', // Pad to meet min 6 char requirement
+          password: password + '00',
           options: {
             data: {
-              original_pin: password // Store the original 4-digit PIN for reference
+              original_pin: password
             }
           }
         });
@@ -136,27 +122,23 @@ const Auth: React.FC = () => {
         toast.success('Account created! Please check your email to verify your account.');
         setLoading(false);
       } else {
-        // For sign in, we need to also pad the password
         const { data, error } = await supabase.auth.signInWithPassword({
           email,
-          password: password + '00' // Pad to meet min 6 char requirement
+          password: password + '00'
         });
         
         if (error) throw error;
         
-        // If we successfully logged in, we should have data with a session
         if (data && data.session) {
           toast.success('Logged in successfully!');
           navigate('/');
         } else {
-          // This should rarely happen, but just in case
           setError('Login successful but session not created. Please try again.');
         }
       }
     } catch (err: any) {
       console.error('Auth error:', err);
       
-      // More specific error messages
       if (err.message.includes('Email not confirmed')) {
         setError('Please check your email and confirm your account before logging in.');
       } else if (err.message.includes('Invalid login credentials')) {
