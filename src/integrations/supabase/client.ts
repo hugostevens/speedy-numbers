@@ -23,15 +23,9 @@ export const supabase = createClient<Database>(
             if (!itemStr) return null;
             
             const item = JSON.parse(itemStr);
-            // Add additional validation for the session structure
-            if (item && typeof item === 'object') {
-              return item;
-            }
-            return null;
+            return item;
           } catch (error) {
             console.error('Error retrieving auth session:', error);
-            // Clear potentially corrupted session data
-            localStorage.removeItem(key);
             return null;
           }
         },
