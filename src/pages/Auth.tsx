@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
@@ -18,21 +18,46 @@ const Auth: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
   const navigate = useNavigate();
   const { user } = useUser();
+  const sessionCheckTimeoutRef = useRef<number | null>(null);
   
-  // Enhanced session check
+  // Enhanced session check with timeout
   useEffect(() => {
     const checkSession = async () => {
       setCheckingSession(true);
+      setError(null);
+      
       try {
         console.log("Checking session on Auth page");
-        const { data, error } = await supabase.auth.getSession();
         
-        if (error) {
-          console.error("Session check error:", error);
+        // Set a timeout to cancel the check if it takes too long
+        const timeoutPromise = new Promise<{data: null, error: Error}>((resolve) => {
+          sessionCheckTimeoutRef.current = window.setTimeout(() => {
+            console.log("Session check timed out");
+            resolve({
+              data: null, 
+              error: new Error("Session check timed out")
+            });
+          }, 5000); // 5 second timeout
+        });
+        
+        // Race between the actual check and the timeout
+        const result = await Promise.race([
+          supabase.auth.getSession(),
+          timeoutPromise
+        ]);
+        
+        // Clear the timeout if the check completes before timeout
+        if (sessionCheckTimeoutRef.current) {
+          clearTimeout(sessionCheckTimeoutRef.current);
+          sessionCheckTimeoutRef.current = null;
+        }
+        
+        if (result.error) {
+          console.error("Session check error:", result.error);
           // Clear potentially corrupted session data
           await supabase.auth.signOut();
           localStorage.removeItem('math-app-auth-token');
-        } else if (data.session) {
+        } else if (result.data?.session) {
           console.log("Valid session found, redirecting to home");
           navigate('/');
         }
@@ -43,6 +68,13 @@ const Auth: React.FC = () => {
         localStorage.removeItem('math-app-auth-token');
       } finally {
         setCheckingSession(false);
+      }
+    };
+    
+    // Clean up the timeout if component unmounts
+    return () => {
+      if (sessionCheckTimeoutRef.current) {
+        clearTimeout(sessionCheckTimeoutRef.current);
       }
     };
     
@@ -60,6 +92,15 @@ const Auth: React.FC = () => {
     if (/^\d{0,4}$/.test(value)) {
       setPassword(value);
     }
+  };
+  
+  // Cancel the session check and allow login
+  const handleCancelSessionCheck = () => {
+    if (sessionCheckTimeoutRef.current) {
+      clearTimeout(sessionCheckTimeoutRef.current);
+      sessionCheckTimeoutRef.current = null;
+    }
+    setCheckingSession(false);
   };
 
   const handleAuth = async (e: React.FormEvent) => {
@@ -134,7 +175,13 @@ const Auth: React.FC = () => {
     return (
       <div className="page-container flex items-center justify-center py-10">
         <div className="math-card w-full max-w-md p-6 text-center">
-          <p>Checking login status...</p>
+          <p className="mb-4">Checking login status...</p>
+          <Button 
+            onClick={handleCancelSessionCheck}
+            variant="outline"
+          >
+            Cancel and proceed to login
+          </Button>
         </div>
       </div>
     );
