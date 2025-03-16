@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase, getSession } from '@/integrations/supabase/client';
@@ -8,6 +7,7 @@ import { Label } from '@/components/ui/label';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { useUser } from '@/context/UserContext';
 import { toast } from 'sonner';
+import { Zap } from 'lucide-react';
 
 const Auth: React.FC = () => {
   const [email, setEmail] = useState('');
@@ -19,20 +19,17 @@ const Auth: React.FC = () => {
   const navigate = useNavigate();
   const { user, session } = useUser();
   
-  // Check if user is already logged in
   useEffect(() => {
     const checkAuthStatus = async () => {
       setCheckingSession(true);
       
       try {
-        // First check if we already have a user in context
         if (user && session) {
           console.log("User already in context, redirecting to home");
           navigate('/');
           return;
         }
         
-        // If not, check for a session directly
         const activeSession = await getSession();
         if (activeSession) {
           console.log("Session found, redirecting to home");
@@ -51,10 +48,8 @@ const Auth: React.FC = () => {
     checkAuthStatus();
   }, [user, session, navigate]);
 
-  // Handle pin input for password - restrict to 4 digits
   const handlePinInput = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value;
-    // Only allow digits and limit to 4 characters
     if (/^\d{0,4}$/.test(value)) {
       setPassword(value);
     }
@@ -78,14 +73,12 @@ const Auth: React.FC = () => {
     
     try {
       if (isSignUp) {
-        // For signup, we need to add custom password validation
-        // by using the signUp method with custom options
         const { error } = await supabase.auth.signUp({
           email,
-          password: password + '00', // Pad to meet min 6 char requirement
+          password: password + '00',
           options: {
             data: {
-              original_pin: password // Store the original 4-digit PIN for reference
+              original_pin: password
             }
           }
         });
@@ -94,29 +87,25 @@ const Auth: React.FC = () => {
         
         toast.success('Account created! Please check your email to verify your account.');
       } else {
-        // For sign in, we need to also pad the password
         console.log("Attempting to log in with email:", email);
         const { data, error } = await supabase.auth.signInWithPassword({
           email,
-          password: password + '00' // Pad to meet min 6 char requirement
+          password: password + '00'
         });
         
         if (error) throw error;
         
-        // If we successfully logged in, we should have data with a session
         if (data && data.session) {
           console.log("Login successful, got session:", data.session.user.id);
           toast.success('Logged in successfully!');
           navigate('/');
         } else {
-          // This should rarely happen, but just in case
           setError('Login successful but session not created. Please try again.');
         }
       }
     } catch (err: any) {
       console.error('Auth error:', err);
       
-      // More specific error messages
       if (err.message.includes('Email not confirmed')) {
         setError('Please check your email and confirm your account before logging in.');
       } else if (err.message.includes('Invalid login credentials')) {
@@ -147,11 +136,23 @@ const Auth: React.FC = () => {
   }
   
   return (
-    <div className="page-container flex items-center justify-center py-10">
+    <div className="page-container flex flex-col items-center justify-center py-10">
+      <div className="text-center mb-8 animate-fade-in">
+        <div className="inline-flex items-center justify-center mb-4">
+          <div className="bg-primary/10 p-4 rounded-full">
+            <Zap size={48} className="text-primary animate-pulse-light" />
+          </div>
+        </div>
+        <h1 className="text-3xl md:text-4xl font-bold text-primary mb-2">Speedy Numbers</h1>
+        <p className="text-muted-foreground max-w-md">
+          Master math skills through fun, quick practice sessions
+        </p>
+      </div>
+
       <div className="math-card w-full max-w-md p-6">
-        <h1 className="text-2xl font-bold mb-6 text-center">
+        <h2 className="text-xl font-bold mb-6 text-center">
           {isSignUp ? 'Create an Account' : 'Welcome Back!'}
-        </h1>
+        </h2>
         
         {error && (
           <Alert variant="destructive" className="mb-4">
@@ -222,3 +223,4 @@ const Auth: React.FC = () => {
 };
 
 export default Auth;
+
