@@ -1,4 +1,3 @@
-
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -15,6 +14,7 @@ import Index from "@/pages/Index";
 import Practice from "@/pages/Practice";
 import PracticeSession from "@/pages/PracticeSession";
 import Knowledge from "@/pages/Knowledge";
+import KnowledgeDetail from "@/pages/KnowledgeDetail";
 import Rewards from "@/pages/Rewards";
 import Progress from "@/pages/Progress";
 import Settings from "@/pages/Settings";
@@ -109,6 +109,11 @@ const App = () => (
               <Route path="/knowledge" element={
                 <ProtectedRoute>
                   <Knowledge />
+                </ProtectedRoute>
+              } />
+              <Route path="/knowledge/:topicId" element={
+                <ProtectedRoute>
+                  <KnowledgeDetail />
                 </ProtectedRoute>
               } />
               <Route path="/rewards" element={
