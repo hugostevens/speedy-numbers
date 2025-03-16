@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Loader2, CheckCircle2 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
+import { ScrollArea } from '@/components/ui/scroll-area';
 
 interface AskQuestionDialogProps {
   open: boolean;
@@ -100,12 +101,14 @@ const AskQuestionDialog: React.FC<AskQuestionDialogProps> = ({ open, onOpenChang
               <p className="text-muted-foreground">{question}</p>
             </div>
             
-            <div className="rounded-md bg-muted/50 p-4">
+            <div className="rounded-md bg-muted/50 p-4 max-h-[200px]">
               <div className="flex items-start gap-3">
-                <CheckCircle2 className="h-5 w-5 text-primary mt-0.5" />
-                <div>
+                <CheckCircle2 className="h-5 w-5 text-primary mt-0.5 flex-shrink-0" />
+                <div className="overflow-hidden">
                   <p className="font-medium mb-2">Answer:</p>
-                  <p className="text-muted-foreground whitespace-pre-line">{answer}</p>
+                  <ScrollArea className="h-[140px] w-full pr-4">
+                    <p className="text-muted-foreground whitespace-pre-line">{answer}</p>
+                  </ScrollArea>
                 </div>
               </div>
             </div>
