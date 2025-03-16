@@ -17,67 +17,69 @@ const Auth: React.FC = () => {
   const [checkingSession, setCheckingSession] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const navigate = useNavigate();
-  const { user } = useUser();
+  const { user, session } = useUser();
   
-  // Enhanced session check with timeout
+  // Check if user is already logged in
   useEffect(() => {
-    const checkSession = async () => {
-      setCheckingSession(true);
-      
-      try {
-        console.log("Checking session on Auth page");
-        
-        // Add timeout to prevent infinite loading
-        const timeoutPromise = new Promise<{data: null, error: Error}>((resolve) => {
-          setTimeout(() => {
-            resolve({
-              data: null,
-              error: new Error('Session check timed out')
-            });
-          }, 5000); // 5 second timeout
-        });
-        
-        // Race between actual session check and timeout
-        const result = await Promise.race([
-          supabase.auth.getSession(),
-          timeoutPromise
-        ]);
-        
-        // Check if the result contains data and session properties
-        if (result && 'data' in result) {
-          const sessionData = result.data;
-          if (sessionData && 'session' in sessionData && sessionData.session) {
-            console.log("Valid session found, redirecting to home");
-            navigate('/');
-            return;
-          }
-        }
-        
-        // If we get here, either there's no session or there was an error
-        console.log("No valid session found");
-        
-        // Clear potentially corrupted session data
-        if ('error' in result) {
-          console.error("Session check error:", result.error);
-          await supabase.auth.signOut();
-          localStorage.removeItem('math-app-auth-token');
-        }
-      } catch (err) {
-        console.error("Unexpected error checking session:", err);
-        // Clear potentially corrupted session data
-        await supabase.auth.signOut();
-        localStorage.removeItem('math-app-auth-token');
-      } finally {
-        setCheckingSession(false);
-      }
-    };
-    
-    if (user) {
+    if (user && session) {
+      console.log("User already logged in, redirecting to home");
       navigate('/');
     } else {
+      // Only check session if we don't already have a user
       checkSession();
     }
-  }, [user, navigate]);
+  }, [user, session, navigate]);
+  
+  const checkSession = async () => {
+    setCheckingSession(true);
+    
+    try {
+      console.log("Checking session on Auth page");
+      
+      // Add timeout to prevent infinite loading
+      const timeoutPromise = new Promise<{data: null, error: Error}>((resolve) => {
+        setTimeout(() => {
+          resolve({
+            data: null,
+            error: new Error('Session check timed out')
+          });
+        }, 5000); // 5 second timeout
+      });
+      
+      // Race between actual session check and timeout
+      const result = await Promise.race([
+        supabase.auth.getSession(),
+        timeoutPromise
+      ]);
+      
+      // Check if the result contains data and session properties
+      if (result && 'data' in result) {
+        const sessionData = result.data;
+        if (sessionData && 'session' in sessionData && sessionData.session) {
+          console.log("Valid session found, redirecting to home");
+          navigate('/');
+          return;
+        }
+      }
+      
+      // If we get here, either there's no session or there was an error
+      console.log("No valid session found");
+      
+      // Clear potentially corrupted session data
+      if ('error' in result) {
+        console.error("Session check error:", result.error);
+        await supabase.auth.signOut();
+        localStorage.removeItem('math-app-auth-token');
+      }
+    } catch (err) {
+      console.error("Unexpected error checking session:", err);
+      // Clear potentially corrupted session data
+      await supabase.auth.signOut();
+      localStorage.removeItem('math-app-auth-token');
+    } finally {
+      setCheckingSession(false);
+    }
+  };
 
   // Handle pin input for password - restrict to 4 digits
   const handlePinInput = (e: React.ChangeEvent<HTMLInputElement>) => {

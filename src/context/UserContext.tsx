@@ -35,90 +35,118 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [user, setUser] = useState<UserProfile | null>(null);
   const [session, setSession] = useState<Session | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [sessionChecked, setSessionChecked] = useState(false);
 
   useEffect(() => {
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      async (event, currentSession) => {
-        console.log('Auth state changed:', event, currentSession?.user?.id);
+    const checkSession = async () => {
+      try {
+        console.log('Initial session check in UserContext');
+        const { data: { session: currentSession } } = await supabase.auth.getSession();
+        console.log('Initial session check result:', currentSession?.user?.id);
+        
         setSession(currentSession);
-        setIsLoading(false);
         
         if (currentSession?.user) {
           await fetchUserData(currentSession);
         } else {
-          console.log('No session found, setting user to null');
+          console.log('No session found in initial check, setting user to null');
           setUser(null);
+        }
+      } catch (error) {
+        console.error('Error during initial session check:', error);
+        setUser(null);
+      } finally {
+        setIsLoading(false);
+        setSessionChecked(true);
+      }
+    };
+    
+    checkSession();
+  }, []);
+
+  useEffect(() => {
+    if (!sessionChecked) return;
+    
+    console.log('Setting up auth state change listener');
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(
+      async (event, currentSession) => {
+        console.log('Auth state changed:', event, currentSession?.user?.id);
+        
+        if (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') {
+          setSession(currentSession);
+          
+          if (currentSession?.user) {
+            await fetchUserData(currentSession);
+          }
+        } else if (event === 'SIGNED_OUT') {
+          console.log('Sign out detected, clearing user data');
+          setUser(null);
+          setSession(null);
         }
       }
     );
 
-    const fetchUserData = async (currentSession: Session) => {
-      try {
-        const { data: streakData, error: streakError } = await supabase
-          .from('user_streaks')
-          .select('*')
-          .eq('user_id', currentSession.user.id)
-          .single();
-          
-        if (streakError && streakError.code !== 'PGRST116') {
-          console.error('Error fetching streak data:', streakError);
-        }
-        
-        const streak = streakData?.current_streak || 0;
-        const longestStreak = streakData?.longest_streak || 0;
+    return () => {
+      console.log('Cleaning up auth subscription');
+      subscription.unsubscribe();
+    };
+  }, [sessionChecked]);
 
-        const userData: UserProfile = {
-          id: currentSession.user.id,
-          name: currentSession.user.email?.split('@')[0] || 'User',
-          avatar: currentSession.user.email?.substring(0, 2).toUpperCase() || 'U',
-          level: 3,
-          streak: streak,
-          longestStreak: longestStreak,
-          dailyGoal: {
-            target: 10,
-            current: 6,
-          },
-          theme: 'space',
-          badges: [],
-          recentActivity: [
-            {
-              date: new Date().toISOString(),
-              action: 'Completed practice session',
-            }
-          ],
-        };
+  const fetchUserData = async (currentSession: Session) => {
+    try {
+      console.log('Fetching user data for:', currentSession.user.id);
+      
+      const { data: streakData, error: streakError } = await supabase
+        .from('user_streaks')
+        .select('*')
+        .eq('user_id', currentSession.user.id)
+        .single();
         
+      if (streakError && streakError.code !== 'PGRST116') {
+        console.error('Error fetching streak data:', streakError);
+      }
+      
+      const streak = streakData?.current_streak || 0;
+      const longestStreak = streakData?.longest_streak || 0;
+
+      const userData: UserProfile = {
+        id: currentSession.user.id,
+        name: currentSession.user.email?.split('@')[0] || 'User',
+        avatar: currentSession.user.email?.substring(0, 2).toUpperCase() || 'U',
+        level: 3,
+        streak: streak,
+        longestStreak: longestStreak,
+        dailyGoal: {
+          target: 10,
+          current: 6,
+        },
+        theme: 'space',
+        badges: [],
+        recentActivity: [
+          {
+            date: new Date().toISOString(),
+            action: 'Completed practice session',
+          }
+        ],
+      };
+      
+      try {
         const { earnedBadges } = await checkForNewBadges(currentSession.user.id);
         if (earnedBadges.length > 0) {
           userData.badges = earnedBadges;
         }
-        
-        console.log('Setting user data:', userData);
-        setUser(userData);
-      } catch (error) {
-        console.error('Error fetching user data:', error);
-        toast.error('Could not load user data');
-      }
-    };
-
-    const checkSession = async () => {
-      const { data: { session: currentSession } } = await supabase.auth.getSession();
-      console.log('Initial session check:', currentSession?.user?.id);
-      setSession(currentSession);
-      
-      if (currentSession?.user) {
-        await fetchUserData(currentSession);
+      } catch (badgeError) {
+        console.error('Error checking for badges:', badgeError);
       }
       
-      setIsLoading(false);
-    };
-    
-    checkSession();
-
-    return () => {
-      subscription.unsubscribe();
-    };
-  }, []);
+      console.log('Setting user data:', userData);
+      setUser(userData);
+    } catch (error) {
+      console.error('Error fetching user data:', error);
+      toast.error('Could not load user data');
+      // Don't set user to null here as we at least have the session
+    }
+  };
 
   const checkAndUpdateStreak = async () => {
     if (!user?.id || !session) return;
@@ -285,10 +313,16 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   const signOut = async () => {
-    await supabase.auth.signOut();
-    setUser(null);
-    setSession(null);
-    toast.success('Signed out successfully');
+    console.log('Signing out user');
+    try {
+      await supabase.auth.signOut();
+      setUser(null);
+      setSession(null);
+      toast.success('Signed out successfully');
+    } catch (error) {
+      console.error('Error signing out:', error);
+      toast.error('Error signing out');
+    }
   };
 
   const checkAndAwardBadges = async () => {

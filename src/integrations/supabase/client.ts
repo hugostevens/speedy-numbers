@@ -14,7 +14,7 @@ export const supabase = createClient<Database>(
     auth: {
       persistSession: true,
       autoRefreshToken: true,
-      detectSessionInUrl: false,
+      detectSessionInUrl: true, // Enable URL detection for redirect flows
       storageKey: 'math-app-auth-token',
       storage: {
         getItem: (key) => {

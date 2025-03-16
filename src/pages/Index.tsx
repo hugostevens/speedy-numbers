@@ -12,27 +12,41 @@ import { supabase } from '@/integrations/supabase/client';
 
 const Index: React.FC = () => {
   const navigate = useNavigate();
-  const { user, isLoading, checkAndAwardBadges } = useUser();
+  const { user, isLoading, session, checkAndAwardBadges, checkAndUpdateStreak } = useUser();
 
-  // Verify Supabase session on page load
+  // Verify user data is loaded on page load
   useEffect(() => {
-    const checkSession = async () => {
-      const { data } = await supabase.auth.getSession();
-      console.log("Current Supabase session on Index page:", data.session);
+    const checkUserAndSession = async () => {
+      console.log("Index page loaded, checking user and session");
+      console.log("Current user state:", user?.id);
+      console.log("Current session state:", session?.user?.id);
+      
+      // If we have a session but no user data, try to reload user data
+      if (session && !user && !isLoading) {
+        console.log("Found session but no user data, trying to fetch user data");
+        try {
+          await checkAndUpdateStreak();
+          await checkAndAwardBadges();
+        } catch (error) {
+          console.error("Error loading user data:", error);
+        }
+      }
     };
     
-    checkSession();
-  }, []);
-
-  // Check for badges when the user visits the home page
+    checkUserAndSession();
+  }, [user, session, isLoading, checkAndUpdateStreak, checkAndAwardBadges]);
+  
+  // Update streak and check for badges when the user visits the home page
   useEffect(() => {
-    if (user) {
+    if (user && session) {
+      console.log("User logged in, checking streak and badges");
+      checkAndUpdateStreak();
       checkAndAwardBadges();
     }
-  }, [user, checkAndAwardBadges]);
+  }, [user, session, checkAndUpdateStreak, checkAndAwardBadges]);
 
   if (isLoading) {
-    return <div className="page-container">Loading...</div>;
+    return <div className="page-container flex items-center justify-center p-10">Loading...</div>;
   }
 
   if (!user) {
