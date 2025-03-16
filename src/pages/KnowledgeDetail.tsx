@@ -1,4 +1,3 @@
-
 import React, { useState, useMemo } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import PageHeader from '@/components/layout/PageHeader';
@@ -62,8 +61,7 @@ const KnowledgeDetail: React.FC = () => {
       />
       
       <p className="text-muted-foreground mb-6">
-        Explore different ways to learn about {getLevelDisplayName(topicId || "")} 
-        through videos, audio clips, and interactive visualizations.
+        Explore different ways to learn about {getLevelDisplayName(topicId || "")} through videos, audio clips, and interactive visualizations.
       </p>
       
       <Tabs defaultValue="videos" className="w-full" onValueChange={setActiveTab}>
