@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
@@ -8,6 +7,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { getOperationSymbol } from '@/lib/math';
 import { useToast } from '@/hooks/use-toast';
 import ReactMarkdown from 'react-markdown';
+import { ScrollArea } from '@/components/ui/scroll-area';
 
 interface QuestionHelpDialogProps {
   open: boolean;
@@ -92,8 +92,10 @@ const QuestionHelpDialog: React.FC<QuestionHelpDialogProps> = ({
                 {num1} {operationSymbol} {num2} = {answer}
               </p>
               {explanation && (
-                <div className="markdown-content">
-                  <ReactMarkdown>{explanation}</ReactMarkdown>
+                <div className="markdown-content max-h-[300px]">
+                  <ScrollArea className="h-[300px] w-full pr-4">
+                    <ReactMarkdown>{explanation}</ReactMarkdown>
+                  </ScrollArea>
                 </div>
               )}
             </div>
