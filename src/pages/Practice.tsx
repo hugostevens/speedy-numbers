@@ -7,6 +7,7 @@ import { Plus, Minus, X, Divide } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useUser } from '@/context/UserContext';
 import { toast } from 'sonner';
+import { getLevelDisplayName } from '@/lib/math';
 
 // Define level status types
 type LevelStatus = 'mastered' | 'available' | 'locked';
@@ -263,7 +264,7 @@ const Practice: React.FC = () => {
                 
                 <div className="flex-1">
                   <div className="flex justify-between items-start">
-                    <h3 className="text-lg font-medium mb-1">{level.name}</h3>
+                    <h3 className="text-lg font-medium mb-1">{getLevelDisplayName(level.id)}</h3>
                     {status === 'mastered' && (
                       <span className="inline-flex items-center text-xs text-green-600 bg-green-100 px-2 py-1 rounded-full">
                         Mastered

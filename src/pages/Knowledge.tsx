@@ -13,6 +13,7 @@ import { useUser } from '@/context/UserContext';
 import { supabase } from '@/integrations/supabase/client';
 import { getOperationSymbol } from '@/lib/math';
 import { useToast } from '@/hooks/use-toast';
+
 interface StruggleQuestion {
   id: string;
   operation: MathOperation;
@@ -21,15 +22,12 @@ interface StruggleQuestion {
   answer: number;
   consecutive_incorrect: number;
 }
+
 const Knowledge: React.FC = () => {
   const navigate = useNavigate();
   const isMobile = useIsMobile();
-  const {
-    user
-  } = useUser();
-  const {
-    toast
-  } = useToast();
+  const { user } = useUser();
+  const { toast } = useToast();
   const [questionDialogOpen, setQuestionDialogOpen] = useState(false);
   const [strugglingQuestions, setStrugglingQuestions] = useState<StruggleQuestion[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -81,12 +79,15 @@ const Knowledge: React.FC = () => {
     };
     fetchStrugglingQuestions();
   }, [user, toast]);
+
   const handleResourceSelect = (resource: KnowledgeItem) => {
     navigate(`/knowledge/resource/${resource.id}`);
   };
+
   const handleAskQuestion = () => {
     setQuestionDialogOpen(true);
   };
+
   const createResourceFromQuestion = (question: StruggleQuestion): KnowledgeItem => {
     const operationSymbol = getOperationSymbol(question.operation);
     return {
@@ -97,12 +98,13 @@ const Knowledge: React.FC = () => {
       tags: [question.operation]
     };
   };
+
   const handleStruggleQuestionSelect = (resource: KnowledgeItem) => {
     console.log('Struggling question selected, but no navigation will occur');
   };
+
   return <div className="page-container">
-      <PageHeader title="Tips & Tricks" showBackButton backPath="/" // Set explicit back path to main page
-    />
+      <PageHeader title="Tips & Tricks" showBackButton backPath="/" />
       
       <div className="mb-6">
         {isLoading ? <p className="text-center py-4">Loading personalized recommendations...</p> : !user ? <div className="bg-muted p-4 rounded-lg mb-4">
@@ -171,11 +173,12 @@ const Knowledge: React.FC = () => {
         </div>
         
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          {Object.values(levels).map(level => <TopicCard key={level.id} id={level.id} title={level.name} description={level.description} />)}
+          {Object.values(levels).map(level => <TopicCard key={level.id} id={level.id} title={level.id} description={level.description} />)}
         </div>
       </div>
 
       <AskQuestionDialog open={questionDialogOpen} onOpenChange={setQuestionDialogOpen} />
     </div>;
 };
+
 export default Knowledge;

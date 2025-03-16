@@ -1,4 +1,3 @@
-
 import { MathOperation, MathQuestion } from '@/types';
 
 export const generateQuestion = (
@@ -26,9 +25,7 @@ export const generateQuestion = (
       break;
     case 'division':
       num2 = Math.floor(Math.random() * (max - min + 1)) + min;
-      // Ensure num2 is not zero
       if (num2 === 0) num2 = 1;
-      // Generate a multiple of num2 for clean division
       const multiple = Math.floor(Math.random() * (max - min + 1)) + min;
       num1 = num2 * multiple;
       answer = multiple;
@@ -79,4 +76,19 @@ export const getOperationColor = (operation: MathOperation): string => {
     case 'multiplication': return 'text-orange-500';
     case 'division': return 'text-green-500';
   }
+};
+
+export const getLevelDisplayName = (levelId: string): string => {
+  const displayNames: Record<string, string> = {
+    'addition-0-4': 'Addition basics',
+    'addition-5-9': 'Addition extras',
+    'subtraction-0-4': 'Subtraction basics',
+    'subtraction-5-9': 'Subtraction extras',
+    'multiplication-0-4': 'Multiplication basics',
+    'multiplication-5-9': 'Multiplication extras',
+    'division-1-4': 'Division basics',
+    'division-5-9': 'Division extras',
+  };
+  
+  return displayNames[levelId] || levelId;
 };

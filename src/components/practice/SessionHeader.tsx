@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { Progress } from '@/components/ui/progress';
-import { formatOperation } from '@/lib/math';
+import { formatOperation, getLevelDisplayName } from '@/lib/math';
 import { MathLevel } from '@/types';
 
 interface SessionHeaderProps {
@@ -24,7 +24,7 @@ const SessionHeader: React.FC<SessionHeaderProps> = ({
           Question {currentIndex + 1} of {totalQuestions}
         </span>
         <span className="font-medium bg-blue-100 text-blue-700 px-3 py-1 rounded-full">
-          Level: {formatOperation(level.operation)} {level.range[0]}-{level.range[1]}
+          Level: {getLevelDisplayName(level.id)}
         </span>
       </div>
       

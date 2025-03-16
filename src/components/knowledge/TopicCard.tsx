@@ -2,6 +2,7 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ChevronRight, Plus, Minus, X, Divide } from 'lucide-react';
+import { getLevelDisplayName } from '@/lib/math';
 
 interface TopicCardProps {
   id: string;
@@ -34,7 +35,7 @@ const TopicCard: React.FC<TopicCardProps> = ({ id, title, description }) => {
         </div>
         
         <div className="flex-1">
-          <h3 className="text-lg font-medium mb-1">{title}</h3>
+          <h3 className="text-lg font-medium mb-1">{getLevelDisplayName(id)}</h3>
           <p className="text-sm text-muted-foreground mb-4">{description}</p>
           
           <button
