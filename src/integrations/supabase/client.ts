@@ -22,10 +22,21 @@ export const supabase = createClient<Database>(
             const itemStr = localStorage.getItem(key);
             if (!itemStr) return null;
             
+            // Validate JSON format before parsing
             const item = JSON.parse(itemStr);
-            return item;
+            
+            // Check if session data is valid
+            if (item && typeof item === 'object') {
+              return item;
+            }
+            
+            // If data is invalid, clean it up
+            localStorage.removeItem(key);
+            return null;
           } catch (error) {
             console.error('Error retrieving auth session:', error);
+            // Clear corrupted session data
+            localStorage.removeItem(key);
             return null;
           }
         },

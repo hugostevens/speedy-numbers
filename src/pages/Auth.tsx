@@ -19,22 +19,48 @@ const Auth: React.FC = () => {
   const navigate = useNavigate();
   const { user } = useUser();
   
-  // Enhanced session check
+  // Enhanced session check with timeout
   useEffect(() => {
     const checkSession = async () => {
       setCheckingSession(true);
+      
       try {
         console.log("Checking session on Auth page");
-        const { data, error } = await supabase.auth.getSession();
         
-        if (error) {
-          console.error("Session check error:", error);
-          // Clear potentially corrupted session data
+        // Add timeout to prevent infinite loading
+        const timeoutPromise = new Promise<{data: null, error: Error}>((resolve) => {
+          setTimeout(() => {
+            resolve({
+              data: null,
+              error: new Error('Session check timed out')
+            });
+          }, 5000); // 5 second timeout
+        });
+        
+        // Race between actual session check and timeout
+        const result = await Promise.race([
+          supabase.auth.getSession(),
+          timeoutPromise
+        ]);
+        
+        // Check if the result contains data and session properties
+        if (result && 'data' in result) {
+          const sessionData = result.data;
+          if (sessionData && 'session' in sessionData && sessionData.session) {
+            console.log("Valid session found, redirecting to home");
+            navigate('/');
+            return;
+          }
+        }
+        
+        // If we get here, either there's no session or there was an error
+        console.log("No valid session found");
+        
+        // Clear potentially corrupted session data
+        if ('error' in result) {
+          console.error("Session check error:", result.error);
           await supabase.auth.signOut();
           localStorage.removeItem('math-app-auth-token');
-        } else if (data.session) {
-          console.log("Valid session found, redirecting to home");
-          navigate('/');
         }
       } catch (err) {
         console.error("Unexpected error checking session:", err);
@@ -130,11 +156,25 @@ const Auth: React.FC = () => {
     }
   };
   
+  const handleSkipSessionCheck = () => {
+    setCheckingSession(false);
+    // Clear potentially corrupted session data
+    localStorage.removeItem('math-app-auth-token');
+    supabase.auth.signOut();
+  };
+  
   if (checkingSession) {
     return (
       <div className="page-container flex items-center justify-center py-10">
         <div className="math-card w-full max-w-md p-6 text-center">
-          <p>Checking login status...</p>
+          <p className="mb-4">Checking login status...</p>
+          <Button 
+            variant="outline" 
+            onClick={handleSkipSessionCheck}
+            className="mt-2"
+          >
+            Cancel and proceed to login
+          </Button>
         </div>
       </div>
     );
