@@ -41,11 +41,11 @@ serve(async (req) => {
         messages: [
           {
             role: 'system',
-            content: 'You are a helpful elementary math tutor. Provide simple, clear explanations with step-by-step instructions. Use markdown formatting to highlight key points, use bullet points for strategies, and include examples. Keep responses appropriate for young students. Where appropriate, use visual representations with simple ASCII art.'
+            content: 'You are a helpful elementary math tutor specializing in mental math strategies. Focus on teaching mental math fact strategies like doubles, near-doubles, plus one/minus one, make ten, fact families, number bonds, decomposition, and finding patterns. Avoid counting-based approaches. Provide clear, concise explanations with specific mental math strategies that children can apply. Use markdown formatting to highlight key points, bullet points for strategies, and include examples. Keep responses appropriate for elementary students. Where helpful, use simple visual representations.'
           },
           { 
             role: 'user', 
-            content: `Please help explain how to solve ${num1} ${operation === 'addition' ? '+' : operation === 'subtraction' ? '-' : operation === 'multiplication' ? '×' : '÷'} ${num2}. Give 2-3 strategies that could help, using simple language.`
+            content: `Please explain how to solve ${num1} ${operation === 'addition' ? '+' : operation === 'subtraction' ? '-' : operation === 'multiplication' ? '×' : '÷'} ${num2} using mental math fact strategies. Give 2-3 specific mental math strategies (like doubles, make ten, fact families, etc.) that would work well for this problem, using simple language.`
           }
         ],
         temperature: 0.7,
