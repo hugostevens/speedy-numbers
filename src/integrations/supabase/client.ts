@@ -14,34 +14,49 @@ export const supabase = createClient<Database>(
     auth: {
       persistSession: true,
       autoRefreshToken: true,
-      detectSessionInUrl: true, // Enable URL detection for redirect flows
+      detectSessionInUrl: false, // Disable URL detection which might cause issues
       storageKey: 'math-app-auth-token',
       storage: {
         getItem: (key) => {
           try {
             const itemStr = localStorage.getItem(key);
+            console.log(`Trying to load session storage for key ${key}:`, itemStr ? 'Found' : 'Not found');
+            
             if (!itemStr) return null;
             
             // Validate JSON format before parsing
-            const item = JSON.parse(itemStr);
-            
-            // Check if session data is valid
-            if (item && typeof item === 'object') {
-              return item;
+            try {
+              const item = JSON.parse(itemStr);
+              
+              // Check if session data is valid
+              if (item && typeof item === 'object') {
+                console.log('Session data loaded successfully');
+                return item;
+              }
+              
+              // If data is invalid, clean it up
+              console.error('Invalid session format, cleaning up');
+              localStorage.removeItem(key);
+              return null;
+            } catch (parseError) {
+              console.error('Session data corrupted, cleaning up', parseError);
+              localStorage.removeItem(key);
+              return null;
             }
-            
-            // If data is invalid, clean it up
-            localStorage.removeItem(key);
-            return null;
           } catch (error) {
             console.error('Error retrieving auth session:', error);
-            // Clear corrupted session data
-            localStorage.removeItem(key);
+            // Try to clear corrupted session data
+            try {
+              localStorage.removeItem(key);
+            } catch (cleanupError) {
+              console.error('Error even when cleaning up:', cleanupError);
+            }
             return null;
           }
         },
         setItem: (key, value) => {
           try {
+            console.log(`Storing session with key ${key}`);
             localStorage.setItem(key, JSON.stringify(value));
           } catch (error) {
             console.error('Error storing auth session:', error);
@@ -49,6 +64,7 @@ export const supabase = createClient<Database>(
         },
         removeItem: (key) => {
           try {
+            console.log(`Removing session with key ${key}`);
             localStorage.removeItem(key);
           } catch (error) {
             console.error('Error removing auth session:', error);

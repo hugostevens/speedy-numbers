@@ -9,7 +9,15 @@ const UserHeader: React.FC = () => {
   const { user } = useUser();
   const navigate = useNavigate();
   
-  if (!user) return null;
+  // If user is not available, show a minimal placeholder
+  if (!user) {
+    return (
+      <div className="flex items-center justify-between mb-6">
+        <div className="animate-pulse bg-gray-200 h-10 w-32 rounded"></div>
+        <div className="animate-pulse bg-gray-200 h-10 w-10 rounded"></div>
+      </div>
+    );
+  }
   
   return (
     <div className="flex items-center justify-between mb-6">

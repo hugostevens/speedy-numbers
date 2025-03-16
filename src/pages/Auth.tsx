@@ -17,12 +17,15 @@ const Auth: React.FC = () => {
   const [checkingSession, setCheckingSession] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const navigate = useNavigate();
-  const { user, session } = useUser();
+  const { user, session, isLoading } = useUser();
   
   // Check if user is already logged in
   useEffect(() => {
+    console.log("Auth page loaded - User state:", user?.id);
+    console.log("Auth page loaded - Session state:", session?.user?.id);
+    
     if (user && session) {
-      console.log("User already logged in, redirecting to home");
+      console.log("User already logged in on Auth page, redirecting to home");
       navigate('/');
     } else {
       // Only check session if we don't already have a user
@@ -34,15 +37,13 @@ const Auth: React.FC = () => {
     setCheckingSession(true);
     
     try {
-      console.log("Checking session on Auth page");
+      console.log("Explicitly checking session on Auth page");
       
       // Add timeout to prevent infinite loading
-      const timeoutPromise = new Promise<{data: null, error: Error}>((resolve) => {
+      const timeoutPromise = new Promise((resolve) => {
         setTimeout(() => {
-          resolve({
-            data: null,
-            error: new Error('Session check timed out')
-          });
+          console.log("Session check timed out");
+          resolve({ data: { session: null }, error: null });
         }, 5000); // 5 second timeout
       });
       
@@ -50,23 +51,22 @@ const Auth: React.FC = () => {
       const result = await Promise.race([
         supabase.auth.getSession(),
         timeoutPromise
-      ]);
+      ]) as { data: { session: any } | null, error: Error | null };
+      
+      console.log("Session check result:", result);
       
       // Check if the result contains data and session properties
-      if (result && 'data' in result) {
-        const sessionData = result.data;
-        if (sessionData && 'session' in sessionData && sessionData.session) {
-          console.log("Valid session found, redirecting to home");
-          navigate('/');
-          return;
-        }
+      if (result && result.data && result.data.session) {
+        console.log("Valid session found on Auth page, redirecting to home");
+        navigate('/');
+        return;
       }
       
       // If we get here, either there's no session or there was an error
       console.log("No valid session found");
       
       // Clear potentially corrupted session data
-      if ('error' in result) {
+      if (result && result.error) {
         console.error("Session check error:", result.error);
         await supabase.auth.signOut();
         localStorage.removeItem('math-app-auth-token');
@@ -74,8 +74,12 @@ const Auth: React.FC = () => {
     } catch (err) {
       console.error("Unexpected error checking session:", err);
       // Clear potentially corrupted session data
-      await supabase.auth.signOut();
-      localStorage.removeItem('math-app-auth-token');
+      try {
+        await supabase.auth.signOut();
+        localStorage.removeItem('math-app-auth-token');
+      } catch (cleanupError) {
+        console.error("Error cleaning up session:", cleanupError);
+      }
     } finally {
       setCheckingSession(false);
     }
@@ -126,6 +130,7 @@ const Auth: React.FC = () => {
         setLoading(false);
       } else {
         // For sign in, we need to also pad the password
+        console.log("Attempting to log in with email:", email);
         const { data, error } = await supabase.auth.signInWithPassword({
           email,
           password: password + '00' // Pad to meet min 6 char requirement
@@ -135,6 +140,7 @@ const Auth: React.FC = () => {
         
         // If we successfully logged in, we should have data with a session
         if (data && data.session) {
+          console.log("Login successful, got session:", data.session.user.id);
           toast.success('Logged in successfully!');
           navigate('/');
         } else {

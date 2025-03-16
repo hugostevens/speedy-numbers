@@ -14,32 +14,46 @@ const Index: React.FC = () => {
   const navigate = useNavigate();
   const { user, isLoading, session, checkAndAwardBadges, checkAndUpdateStreak } = useUser();
 
-  // Verify user data is loaded on page load
+  // Verify user and session when the page loads
   useEffect(() => {
     const checkUserAndSession = async () => {
-      console.log("Index page loaded, checking user and session");
+      console.log("Index page loaded, checking user and session state");
       console.log("Current user state:", user?.id);
       console.log("Current session state:", session?.user?.id);
       
-      // If we have a session but no user data, try to reload user data
-      if (session && !user && !isLoading) {
+      if (isLoading) {
+        console.log("User context is still loading, waiting...");
+        return;
+      }
+      
+      // If we have a session but no user data, try to forcefully reload it
+      if (session && !user) {
         console.log("Found session but no user data, trying to fetch user data");
         try {
+          // First check the streak since this populates user data
           await checkAndUpdateStreak();
+          // Then check badges which also updates user UI
           await checkAndAwardBadges();
         } catch (error) {
           console.error("Error loading user data:", error);
+          // If we can't load the user data, we might have an invalid session
+          // Redirect to auth page
+          navigate('/auth');
         }
+      } else if (!session && !isLoading) {
+        console.log("No session found, redirecting to auth");
+        navigate('/auth');
       }
     };
     
     checkUserAndSession();
-  }, [user, session, isLoading, checkAndUpdateStreak, checkAndAwardBadges]);
+  }, [user, session, isLoading, navigate, checkAndUpdateStreak, checkAndAwardBadges]);
   
   // Update streak and check for badges when the user visits the home page
+  // But only if we have both a user and session
   useEffect(() => {
     if (user && session) {
-      console.log("User logged in, checking streak and badges");
+      console.log("User logged in and present, checking streak and badges");
       checkAndUpdateStreak();
       checkAndAwardBadges();
     }
@@ -49,7 +63,7 @@ const Index: React.FC = () => {
     return <div className="page-container flex items-center justify-center p-10">Loading...</div>;
   }
 
-  if (!user) {
+  if (!user || !session) {
     return (
       <div className="page-container flex flex-col items-center justify-center h-[80vh] gap-6">
         <h1 className="text-3xl font-bold text-center">Speedy Numbers Fun</h1>
