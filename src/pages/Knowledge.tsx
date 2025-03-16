@@ -13,7 +13,6 @@ import { useUser } from '@/context/UserContext';
 import { supabase } from '@/integrations/supabase/client';
 import { getOperationSymbol } from '@/lib/math';
 import { useToast } from '@/hooks/use-toast';
-
 interface StruggleQuestion {
   id: string;
   operation: MathOperation;
@@ -22,12 +21,15 @@ interface StruggleQuestion {
   answer: number;
   consecutive_incorrect: number;
 }
-
 const Knowledge: React.FC = () => {
   const navigate = useNavigate();
   const isMobile = useIsMobile();
-  const { user } = useUser();
-  const { toast } = useToast();
+  const {
+    user
+  } = useUser();
+  const {
+    toast
+  } = useToast();
   const [questionDialogOpen, setQuestionDialogOpen] = useState(false);
   const [strugglingQuestions, setStrugglingQuestions] = useState<StruggleQuestion[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -79,15 +81,12 @@ const Knowledge: React.FC = () => {
     };
     fetchStrugglingQuestions();
   }, [user, toast]);
-
   const handleResourceSelect = (resource: KnowledgeItem) => {
     navigate(`/knowledge/resource/${resource.id}`);
   };
-
   const handleAskQuestion = () => {
     setQuestionDialogOpen(true);
   };
-
   const createResourceFromQuestion = (question: StruggleQuestion): KnowledgeItem => {
     const operationSymbol = getOperationSymbol(question.operation);
     return {
@@ -98,11 +97,9 @@ const Knowledge: React.FC = () => {
       tags: [question.operation]
     };
   };
-
   const handleStruggleQuestionSelect = (resource: KnowledgeItem) => {
     console.log('Struggling question selected, but no navigation will occur');
   };
-
   return <div className="page-container">
       <PageHeader title="Tips & Tricks" showBackButton backPath="/" />
       
@@ -126,9 +123,7 @@ const Knowledge: React.FC = () => {
       
       <div className="math-card mb-6 bg-soft-blue">
         <h2 className="text-lg font-semibold mb-2">Need help with anything else?</h2>
-        <p className="text-sm text-muted-foreground mb-4">
-          Have a question about a math problem or concept? Ask for help!
-        </p>
+        <p className="text-sm text-muted-foreground mb-4">Have a question about a math problem or concept? Ask me anything!</p>
         <Button onClick={handleAskQuestion} className="w-full" variant="default">
           <MessageCircleQuestion className="mr-2" />
           Ask a Question
@@ -180,5 +175,4 @@ const Knowledge: React.FC = () => {
       <AskQuestionDialog open={questionDialogOpen} onOpenChange={setQuestionDialogOpen} />
     </div>;
 };
-
 export default Knowledge;
