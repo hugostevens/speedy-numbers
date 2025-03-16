@@ -1,7 +1,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { supabase } from '@/integrations/supabase/client';
+import { supabase, getSession } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -17,73 +17,39 @@ const Auth: React.FC = () => {
   const [checkingSession, setCheckingSession] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const navigate = useNavigate();
-  const { user, session, isLoading } = useUser();
+  const { user, session } = useUser();
   
   // Check if user is already logged in
   useEffect(() => {
-    console.log("Auth page loaded - User state:", user?.id);
-    console.log("Auth page loaded - Session state:", session?.user?.id);
-    
-    if (user && session) {
-      console.log("User already logged in on Auth page, redirecting to home");
-      navigate('/');
-    } else {
-      // Only check session if we don't already have a user
-      checkSession();
-    }
-  }, [user, session, navigate]);
-  
-  const checkSession = async () => {
-    setCheckingSession(true);
-    
-    try {
-      console.log("Explicitly checking session on Auth page");
+    const checkAuthStatus = async () => {
+      setCheckingSession(true);
       
-      // Add timeout to prevent infinite loading
-      const timeoutPromise = new Promise((resolve) => {
-        setTimeout(() => {
-          console.log("Session check timed out");
-          resolve({ data: { session: null }, error: null });
-        }, 5000); // 5 second timeout
-      });
-      
-      // Race between actual session check and timeout
-      const result = await Promise.race([
-        supabase.auth.getSession(),
-        timeoutPromise
-      ]) as { data: { session: any } | null, error: Error | null };
-      
-      console.log("Session check result:", result);
-      
-      // Check if the result contains data and session properties
-      if (result && result.data && result.data.session) {
-        console.log("Valid session found on Auth page, redirecting to home");
-        navigate('/');
-        return;
-      }
-      
-      // If we get here, either there's no session or there was an error
-      console.log("No valid session found");
-      
-      // Clear potentially corrupted session data
-      if (result && result.error) {
-        console.error("Session check error:", result.error);
-        await supabase.auth.signOut();
-        localStorage.removeItem('math-app-auth-token');
-      }
-    } catch (err) {
-      console.error("Unexpected error checking session:", err);
-      // Clear potentially corrupted session data
       try {
-        await supabase.auth.signOut();
-        localStorage.removeItem('math-app-auth-token');
-      } catch (cleanupError) {
-        console.error("Error cleaning up session:", cleanupError);
+        // First check if we already have a user in context
+        if (user && session) {
+          console.log("User already in context, redirecting to home");
+          navigate('/');
+          return;
+        }
+        
+        // If not, check for a session directly
+        const activeSession = await getSession();
+        if (activeSession) {
+          console.log("Session found, redirecting to home");
+          navigate('/');
+          return;
+        }
+        
+        console.log("No active session found, showing login form");
+      } catch (err) {
+        console.error("Error checking auth status:", err);
+      } finally {
+        setCheckingSession(false);
       }
-    } finally {
-      setCheckingSession(false);
-    }
-  };
+    };
+    
+    checkAuthStatus();
+  }, [user, session, navigate]);
 
   // Handle pin input for password - restrict to 4 digits
   const handlePinInput = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -127,7 +93,6 @@ const Auth: React.FC = () => {
         if (error) throw error;
         
         toast.success('Account created! Please check your email to verify your account.');
-        setLoading(false);
       } else {
         // For sign in, we need to also pad the password
         console.log("Attempting to log in with email:", email);
@@ -164,13 +129,6 @@ const Auth: React.FC = () => {
     }
   };
   
-  const handleSkipSessionCheck = () => {
-    setCheckingSession(false);
-    // Clear potentially corrupted session data
-    localStorage.removeItem('math-app-auth-token');
-    supabase.auth.signOut();
-  };
-  
   if (checkingSession) {
     return (
       <div className="page-container flex items-center justify-center py-10">
@@ -178,7 +136,7 @@ const Auth: React.FC = () => {
           <p className="mb-4">Checking login status...</p>
           <Button 
             variant="outline" 
-            onClick={handleSkipSessionCheck}
+            onClick={() => setCheckingSession(false)}
             className="mt-2"
           >
             Cancel and proceed to login

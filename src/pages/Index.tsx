@@ -8,56 +8,55 @@ import RecentRewards from '@/components/dashboard/RecentRewards';
 import LearningSection from '@/components/dashboard/LearningSection';
 import { Button } from '@/components/ui/button';
 import { LogIn } from 'lucide-react';
-import { supabase } from '@/integrations/supabase/client';
+import { supabase, getSession } from '@/integrations/supabase/client';
 
 const Index: React.FC = () => {
   const navigate = useNavigate();
   const { user, isLoading, session, checkAndAwardBadges, checkAndUpdateStreak } = useUser();
 
-  // Verify user and session when the page loads
+  // Check and load user data when the page loads
   useEffect(() => {
-    const checkUserAndSession = async () => {
+    const loadUserData = async () => {
       console.log("Index page loaded, checking user and session state");
-      console.log("Current user state:", user?.id);
-      console.log("Current session state:", session?.user?.id);
       
       if (isLoading) {
         console.log("User context is still loading, waiting...");
         return;
       }
       
-      // If we have a session but no user data, try to forcefully reload it
-      if (session && !user) {
-        console.log("Found session but no user data, trying to fetch user data");
+      // If no session but auth state finished loading, redirect to login
+      if (!session && !isLoading) {
+        console.log("No session found, redirecting to auth");
+        navigate('/auth');
+        return;
+      }
+      
+      // If we have a session and user data, update streaks and badges
+      if (session && user) {
+        console.log("User logged in and present, checking streak and badges");
         try {
-          // First check the streak since this populates user data
           await checkAndUpdateStreak();
-          // Then check badges which also updates user UI
+          await checkAndAwardBadges();
+        } catch (error) {
+          console.error("Error updating user data:", error);
+        }
+      }
+      // If we have a session but no user data, force reload
+      else if (session && !user) {
+        console.log("Session found but no user data, trying to reload user data");
+        try {
+          await checkAndUpdateStreak();
           await checkAndAwardBadges();
         } catch (error) {
           console.error("Error loading user data:", error);
           // If we can't load the user data, we might have an invalid session
-          // Redirect to auth page
           navigate('/auth');
         }
-      } else if (!session && !isLoading) {
-        console.log("No session found, redirecting to auth");
-        navigate('/auth');
       }
     };
     
-    checkUserAndSession();
+    loadUserData();
   }, [user, session, isLoading, navigate, checkAndUpdateStreak, checkAndAwardBadges]);
-  
-  // Update streak and check for badges when the user visits the home page
-  // But only if we have both a user and session
-  useEffect(() => {
-    if (user && session) {
-      console.log("User logged in and present, checking streak and badges");
-      checkAndUpdateStreak();
-      checkAndAwardBadges();
-    }
-  }, [user, session, checkAndUpdateStreak, checkAndAwardBadges]);
 
   if (isLoading) {
     return <div className="page-container flex items-center justify-center p-10">Loading...</div>;

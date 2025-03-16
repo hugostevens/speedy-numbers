@@ -8,6 +8,7 @@ import { UserProvider } from "@/context/UserContext";
 import Layout from "@/components/layout/Layout";
 import { useUser } from "@/context/UserContext";
 import { Suspense, lazy, useEffect, useState } from "react";
+import { getSession } from "@/integrations/supabase/client";
 
 // Pages
 import Index from "@/pages/Index";
@@ -35,11 +36,36 @@ const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
   const [checking, setChecking] = useState(true);
   
   useEffect(() => {
-    // Once user state is loaded, we can determine access
-    if (!isLoading) {
-      setChecking(false);
-    }
-  }, [isLoading]);
+    const checkAuth = async () => {
+      // If user context is still loading, wait
+      if (isLoading) return;
+      
+      // If user exists in context, we're good
+      if (user) {
+        setChecking(false);
+        return;
+      }
+      
+      // No user in context, try to get session directly
+      try {
+        const session = await getSession();
+        if (!session) {
+          // No session, we need to redirect
+          setChecking(false);
+        } else {
+          // We have a session but no user data
+          // The UserContext should handle this case through its auth listener
+          // Just wait a bit longer for it to catch up
+          setTimeout(() => setChecking(false), 500);
+        }
+      } catch (err) {
+        console.error("Error checking session in ProtectedRoute:", err);
+        setChecking(false);
+      }
+    };
+    
+    checkAuth();
+  }, [user, isLoading]);
   
   // Show loading state while checking
   if (checking || isLoading) {
