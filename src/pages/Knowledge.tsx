@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import PageHeader from '@/components/layout/PageHeader';
 import ResourceCard from '@/components/knowledge/ResourceCard';
@@ -14,7 +13,6 @@ import { useUser } from '@/context/UserContext';
 import { supabase } from '@/integrations/supabase/client';
 import { getOperationSymbol } from '@/lib/math';
 import { useToast } from '@/hooks/use-toast';
-
 interface StruggleQuestion {
   id: string;
   operation: MathOperation;
@@ -23,16 +21,18 @@ interface StruggleQuestion {
   answer: number;
   consecutive_incorrect: number;
 }
-
 const Knowledge: React.FC = () => {
   const navigate = useNavigate();
   const isMobile = useIsMobile();
-  const { user } = useUser();
-  const { toast } = useToast();
+  const {
+    user
+  } = useUser();
+  const {
+    toast
+  } = useToast();
   const [questionDialogOpen, setQuestionDialogOpen] = useState(false);
   const [strugglingQuestions, setStrugglingQuestions] = useState<StruggleQuestion[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-  
   useEffect(() => {
     const fetchStrugglingQuestions = async () => {
       if (!user?.id) {
@@ -40,18 +40,14 @@ const Knowledge: React.FC = () => {
         setIsLoading(false);
         return;
       }
-      
       try {
         console.log('Fetching struggling questions for user:', user.id);
-        
-        const { data, error } = await supabase
-          .from('user_question_performance')
-          .select('*')
-          .eq('user_id', user.id)
-          .gt('consecutive_incorrect', 0)
-          .order('consecutive_incorrect', { ascending: false })
-          .limit(3);
-          
+        const {
+          data,
+          error
+        } = await supabase.from('user_question_performance').select('*').eq('user_id', user.id).gt('consecutive_incorrect', 0).order('consecutive_incorrect', {
+          ascending: false
+        }).limit(3);
         if (error) {
           console.error('Error fetching struggling questions:', error);
           toast({
@@ -62,20 +58,16 @@ const Knowledge: React.FC = () => {
           setIsLoading(false);
           return;
         }
-        
         console.log('Found struggling questions:', data);
-        
         if (data && data.length > 0) {
           const typedData = data.map(item => ({
             ...item,
             operation: item.operation as MathOperation
           })) as StruggleQuestion[];
-          
           setStrugglingQuestions(typedData);
         } else {
           setStrugglingQuestions([]);
         }
-        
         setIsLoading(false);
       } catch (error) {
         console.error('Error processing struggling questions:', error);
@@ -87,21 +79,16 @@ const Knowledge: React.FC = () => {
         setIsLoading(false);
       }
     };
-    
     fetchStrugglingQuestions();
   }, [user, toast]);
-  
   const handleResourceSelect = (resource: KnowledgeItem) => {
     navigate(`/knowledge/resource/${resource.id}`);
   };
-
   const handleAskQuestion = () => {
     setQuestionDialogOpen(true);
   };
-  
   const createResourceFromQuestion = (question: StruggleQuestion): KnowledgeItem => {
     const operationSymbol = getOperationSymbol(question.operation);
-    
     return {
       id: question.id,
       title: `${question.num1} ${operationSymbol} ${question.num2} = ${question.answer}`,
@@ -110,54 +97,29 @@ const Knowledge: React.FC = () => {
       tags: [question.operation]
     };
   };
-  
   const handleStruggleQuestionSelect = (resource: KnowledgeItem) => {
     console.log('Struggling question selected, but no navigation will occur');
   };
-  
-  return (
-    <div className="page-container">
-      <PageHeader 
-        title="Tips & Tricks" 
-        showBackButton 
-        backPath="/" // Set explicit back path to main page
-      />
+  return <div className="page-container">
+      <PageHeader title="Tips & Tricks" showBackButton backPath="/" // Set explicit back path to main page
+    />
       
       <div className="mb-6">
-        {isLoading ? (
-          <p className="text-center py-4">Loading personalized recommendations...</p>
-        ) : !user ? (
-          <div className="bg-muted p-4 rounded-lg mb-4">
+        {isLoading ? <p className="text-center py-4">Loading personalized recommendations...</p> : !user ? <div className="bg-muted p-4 rounded-lg mb-4">
             <h2 className="text-lg font-semibold mb-2">Sign in to see personalized recommendations</h2>
             <p className="text-sm text-muted-foreground">
               We'll show you questions you're struggling with and recommend resources to help.
             </p>
-          </div>
-        ) : strugglingQuestions.length > 0 ? (
-          <>
-            <h2 className="text-lg font-semibold mb-4">Would you like some help with the following questions?</h2>
+          </div> : strugglingQuestions.length > 0 ? <>
+            <h2 className="text-lg font-semibold mb-4">We noticed you might need some extra help with the following questions:</h2>
             
-            {strugglingQuestions.map(question => (
-              <ResourceCard 
-                key={question.id}
-                resource={createResourceFromQuestion(question)}
-                onSelect={handleStruggleQuestionSelect}
-                num1={question.num1}
-                num2={question.num2}
-                operation={question.operation}
-                answer={question.answer}
-                showHelpButton={true}
-              />
-            ))}
-          </>
-        ) : (
-          <>
+            {strugglingQuestions.map(question => <ResourceCard key={question.id} resource={createResourceFromQuestion(question)} onSelect={handleStruggleQuestionSelect} num1={question.num1} num2={question.num2} operation={question.operation} answer={question.answer} showHelpButton={true} />)}
+          </> : <>
             <h2 className="text-lg font-semibold mb-4">Great job! You're not struggling with any questions.</h2>
             <p className="text-sm text-muted-foreground mb-4">
               As you practice more, we'll recommend resources for questions you find challenging.
             </p>
-          </>
-        )}
+          </>}
       </div>
       
       <div className="math-card mb-6 bg-soft-blue">
@@ -165,11 +127,7 @@ const Knowledge: React.FC = () => {
         <p className="text-sm text-muted-foreground mb-4">
           Have a question about a math problem or concept? Ask for help!
         </p>
-        <Button 
-          onClick={handleAskQuestion}
-          className="w-full"
-          variant="default"
-        >
+        <Button onClick={handleAskQuestion} className="w-full" variant="default">
           <MessageCircleQuestion className="mr-2" />
           Ask a Question
         </Button>
@@ -213,23 +171,11 @@ const Knowledge: React.FC = () => {
         </div>
         
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          {Object.values(levels).map(level => (
-            <TopicCard
-              key={level.id}
-              id={level.id}
-              title={level.name}
-              description={level.description}
-            />
-          ))}
+          {Object.values(levels).map(level => <TopicCard key={level.id} id={level.id} title={level.name} description={level.description} />)}
         </div>
       </div>
 
-      <AskQuestionDialog 
-        open={questionDialogOpen} 
-        onOpenChange={setQuestionDialogOpen} 
-      />
-    </div>
-  );
+      <AskQuestionDialog open={questionDialogOpen} onOpenChange={setQuestionDialogOpen} />
+    </div>;
 };
-
 export default Knowledge;
