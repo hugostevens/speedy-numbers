@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import PageHeader from '@/components/layout/PageHeader';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -13,24 +13,45 @@ const KnowledgeDetail: React.FC = () => {
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState("videos");
   
-  // Mock learning materials data
-  const learningMaterials = {
-    videos: [
-      { id: 1, title: "Understanding Basic Addition", duration: "5:23", thumbnail: "https://images.unsplash.com/photo-1485827404703-89b55fcc595e?auto=format&w=400" },
-      { id: 2, title: "Visual Addition Strategies", duration: "4:17", thumbnail: "https://images.unsplash.com/photo-1460925895917-afdab827c52f?auto=format&w=400" },
-      { id: 3, title: "Step-by-Step Addition Examples", duration: "7:45", thumbnail: "https://images.unsplash.com/photo-1486312338219-ce68d2c6f44d?auto=format&w=400" },
-    ],
-    audios: [
-      { id: 1, title: "Counting Song", duration: "3:10" },
-      { id: 2, title: "Addition Rhymes", duration: "2:45" },
-      { id: 3, title: "Number Facts Podcast", duration: "10:22" },
-    ],
-    visuals: [
-      { id: 1, title: "Number Line Visualization", type: "Interactive" },
-      { id: 2, title: "Addition with Blocks", type: "Diagram" },
-      { id: 3, title: "Fact Family Triangles", type: "Interactive" },
-    ]
-  };
+  // Generate topic-specific learning materials based on the topicId
+  const learningMaterials = useMemo(() => {
+    const topic = topicId || "";
+    const topicName = getLevelDisplayName(topic);
+    const isAddition = topic.includes('addition');
+    const isSubtraction = topic.includes('subtraction');
+    const isMultiplication = topic.includes('multiplication');
+    const isDivision = topic.includes('division');
+    const isBasics = topic.includes('0-4') || topic.includes('1-4');
+    
+    let topicDescription = '';
+    if (isAddition) {
+      topicDescription = isBasics ? 'basic addition' : 'advanced addition';
+    } else if (isSubtraction) {
+      topicDescription = isBasics ? 'basic subtraction' : 'advanced subtraction';
+    } else if (isMultiplication) {
+      topicDescription = isBasics ? 'basic multiplication' : 'advanced multiplication';
+    } else if (isDivision) {
+      topicDescription = isBasics ? 'basic division' : 'advanced division';
+    }
+    
+    return {
+      videos: [
+        { id: 1, title: `Understanding ${topicName}`, duration: "5:23", thumbnail: "https://images.unsplash.com/photo-1485827404703-89b55fcc595e?auto=format&w=400" },
+        { id: 2, title: `Visual ${topicDescription} Strategies`, duration: "4:17", thumbnail: "https://images.unsplash.com/photo-1460925895917-afdab827c52f?auto=format&w=400" },
+        { id: 3, title: `Step-by-Step ${topicDescription} Examples`, duration: "7:45", thumbnail: "https://images.unsplash.com/photo-1486312338219-ce68d2c6f44d?auto=format&w=400" },
+      ],
+      audios: [
+        { id: 1, title: `${topicName} Song`, duration: "3:10" },
+        { id: 2, title: `${topicDescription.charAt(0).toUpperCase() + topicDescription.slice(1)} Rhymes`, duration: "2:45" },
+        { id: 3, title: `${topicName} Facts Podcast`, duration: "10:22" },
+      ],
+      visuals: [
+        { id: 1, title: `${topicName} Number Line`, type: "Interactive" },
+        { id: 2, title: `${topicDescription.charAt(0).toUpperCase() + topicDescription.slice(1)} with Visual Models`, type: "Diagram" },
+        { id: 3, title: `${topicName} Fact Family Triangles`, type: "Interactive" },
+      ]
+    };
+  }, [topicId]);
   
   return (
     <div className="page-container">
