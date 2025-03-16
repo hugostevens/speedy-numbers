@@ -7,6 +7,7 @@ import { useUser } from '@/context/UserContext';
 import { supabase } from '@/integrations/supabase/client';
 import { levels } from '@/data/mathLevels';
 import { MathOperation } from '@/types';
+import { getLevelDisplayName } from '@/lib/math';
 
 interface ProgressItem {
   id: string;
@@ -132,7 +133,7 @@ const ProgressContent: React.FC = () => {
               <div key={item.id} className="space-y-2">
                 <div className="flex justify-between items-center">
                   <div className="text-lg font-medium">
-                    {item.operation} {item.range}
+                    {getLevelDisplayName(item.id)}
                   </div>
                   <div className="font-semibold">
                     {item.percentage}% {item.total > 0 && `(${item.mastered}/${item.total})`}
